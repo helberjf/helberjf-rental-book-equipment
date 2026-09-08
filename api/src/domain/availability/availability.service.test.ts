@@ -193,4 +193,30 @@ describe("AvailabilityService", () => {
 
     expect(result.map((unit) => unit.identifier)).toEqual(["Robo 02", "Robo 03"]);
   });
+
+  it("allows Robo 01 in two same-day events when the first blocked interval ends before the second starts", () => {
+    const result = AvailabilityService.checkAvailability(
+      baseInput({
+        units: [
+          { id: 1, productId: 1, identifier: "Robo 01", status: "AVAILABLE", active: true },
+          { id: 2, productId: 1, identifier: "Robo 02", status: "AVAILABLE", active: true },
+          { id: 3, productId: 1, identifier: "Robo 03", status: "AVAILABLE", active: true },
+          { id: 4, productId: 1, identifier: "Robo 04", status: "AVAILABLE", active: true },
+          { id: 5, productId: 1, identifier: "Robo 05", status: "AVAILABLE", active: true },
+          { id: 6, productId: 1, identifier: "Robo 06", status: "AVAILABLE", active: true },
+          { id: 7, productId: 1, identifier: "Robo 07", status: "AVAILABLE", active: true },
+          { id: 8, productId: 1, identifier: "Robo 08", status: "AVAILABLE", active: true },
+        ],
+        reservations: [
+          reservation(1, "2026-09-20T14:00:00-03:00", "2026-09-20T17:00:00-03:00"),
+        ],
+        requestedStartAt: new Date("2026-09-20T21:00:00-03:00"),
+        requestedEndAt: new Date("2026-09-21T00:00:00-03:00"),
+        requestedQuantity: 3,
+      }),
+    );
+
+    expect(result.availableUnits.map((unit) => unit.identifier)).toContain("Robo 01");
+    expect(result.isAvailable).toBe(true);
+  });
 });
