@@ -1,0 +1,4 @@
+Next cleanup tasks:
+
+- Complete the rental return workflow if it remains useful for the final product.
+- Fix report totals after the payment model is migrated.

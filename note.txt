@@ -1,0 +1,39 @@
+Project setup notes:
+
+Frontend starter commands:
+
+```bash
+npm create vite@latest my-app
+cd my-app
+npm install react-router-dom axios sweetalert2
+npm run dev
+```
+
+Backend starter commands:
+
+```bash
+npm init -y
+npm install express cors dotenv jsonwebtoken express-fileupload cookie-parser bcryptjs multer
+npm install -D typescript ts-node nodemon @types/node @types/express @types/cors @types/jsonwebtoken @types/bcryptjs
+npx tsc --init
+npm install -D prisma@^6
+npm install @prisma/client@^6
+npx prisma init --datasource-provider postgresql
+npx prisma migrate dev
+npx prisma generate
+npx prisma studio
+```
+
+Testing options:
+
+- Jest and Supertest for backend API tests.
+- Vitest for fast service/domain tests.
+- Cypress or Playwright for frontend end-to-end tests.
+
+Naming conventions:
+
+- Components: PascalCase.
+- Layouts: PascalCase ending with `Layout`.
+- Pages: PascalCase ending with `Page` when practical.
+- Props and variables: camelCase.
+- Routes and URLs: kebab-case.

@@ -1,0 +1,13 @@
+Git setup reference:
+
+```bash
+git init
+git status
+git add .
+git commit -m "initial commit"
+git branch -M main
+git remote add origin https://github.com/helberjf/helberjf-rental-book-equipment.git
+git push -u origin main
+```
+
+For the Codex desktop app, add the remote named `origin` from project settings if needed.

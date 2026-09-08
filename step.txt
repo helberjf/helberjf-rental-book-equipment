@@ -1,0 +1,57 @@
+Controller and module creation order:
+
+Phase 1 — Foundation
+
+- `auth.controller.js`: register, login, session handling.
+- `user.controller.js`: user CRUD and profile operations.
+- `address.controller.js`: user addresses, if retained.
+- `audit.controller.js`: standalone audit logs.
+
+Phase 2 — Product system
+
+- `category.controller.js`: product categories.
+- `type.controller.js`: optional product grouping.
+- `product.controller.js`: product CRUD.
+- `productImage.controller.js`: product images.
+- `variant.controller.js`: legacy variants, to be replaced by physical equipment units.
+
+Phase 3 — Event rental system
+
+- `customer.controller.js`: customer and responsible person records.
+- `employee.controller.js`: staff records and assignments.
+- `equipmentUnit.controller.js`: physical equipment units.
+- `rental.controller.js`: event bookings.
+- `reservation.controller.js`: time-based unit reservations.
+- `availability.controller.js`: conflict checks.
+
+Phase 4 — Payments and reports
+
+- `payment.controller.js`: payment records and payment status.
+- `invoice.controller.js`: invoices or receipts.
+- `report.controller.js`: monthly printable reports.
+- `admin.controller.js`: dashboard and macro metrics.
+
+Admin modules:
+
+1. Authentication
+2. Dashboard
+3. User management
+4. Product and equipment management
+5. Customer management
+6. Employee management
+7. Rental calendar
+8. Payment tracking
+9. Reports
+10. Audit logs
+
+Final event-rental workflow:
+
+1. Create or select a customer.
+2. Create an event rental with date, start time, and end time.
+3. Select physical equipment units.
+4. Assign an employee.
+5. Validate availability.
+6. Save blocked equipment reservations.
+7. Track charged amount, received amount, and remaining amount.
+8. Display the event on the calendar.
+9. Include the event in monthly printable reports.
