@@ -1,101 +1,103 @@
-import { useState, useEffect } from "react";
-import { showError } from "../utils/alert.utils";
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { ErrorBlock, LoadingBlock, StatusBadge } from "../components/RentalUI";
+import { formatCurrency, formatEventDate } from "../domain/rental-utils";
 import api from "../services/axios";
+import { getApiError } from "../services/errors";
+
+const cards = (data) => [
+  { label: "Events this month", value: data.events, hint: "Confirmed and planned", tone: "violet" },
+  { label: "Upcoming events", value: data.futureEvents, hint: "Still ahead this month", tone: "blue" },
+  { label: "Amount received", value: formatCurrency(data.receivedAmountCents), hint: "Confirmed payments", tone: "green" },
+  { label: "Open balance", value: formatCurrency(data.remainingAmountCents), hint: "Expected from clients", tone: "amber" },
+];
 
 export default function Dashboard() {
-  const [summary, setSummary] = useState(null);
-  const [lowStock, setLowStock] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const res = await api.get("/api/admin/dashboard");
-        setSummary(res.data.result.summary);
-        setLowStock(res.data.result.lowStockVariants);
-      } catch (e) {
-        showError(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+  const load = useCallback(async () => {
+    setError("");
+    try {
+      const response = await api.get("/api/dashboard");
+      setData(response.data.result);
+    } catch (requestError) {
+      setError(getApiError(requestError));
+    }
   }, []);
 
-  const statCards = [
-    { label: "User", value: summary?.totalUsers, color: "primary" },
-    { label: "Product Active", value: summary?.totalProducts, color: "success" },
-    { label: "Rental", value: summary?.totalRentals, color: "info" },
-    { label: "Rental", value: summary?.rentalsToday, color: "secondary" },
-    { label: "Rental", value: summary?.rentalsThisMonth, color: "secondary" },
-    { label: "Pending confirmation", value: summary?.pendingRentals, color: "warning" },
-    { label: "Active rental", value: summary?.activeRentals, color: "success" },
-    { label: "Overdue", value: summary?.lateRentals, color: "danger" },
-    { label: "Payment slip", value: summary?.pendingPayments, color: "warning" },
-    { label: "Details", value: summary ? `$${summary.revenueThisMonth.toLocaleString()}` : "-", color: "success" },
-    { label: "Details", value: summary ? `$${summary.revenueTotal.toLocaleString()}` : "-", color: "primary" },
-  ];
+  useEffect(() => {
+    const timer = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
+
+  if (error) return <ErrorBlock message={error} onRetry={load} />;
+  if (!data) return <LoadingBlock label="Loading overview" />;
 
   return (
-    <>
-      <div className="card mt-3 shadow-sm">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <span>Dashboard</span>
-          {loading && <div className="spinner-border spinner-border-sm text-secondary" />}
+    <div className="page-stack">
+      <section className="hero-panel">
+        <div>
+          <span className="eyebrow">OPERATIONS CENTER</span>
+          <h2>Every event, unit and payment in one place.</h2>
+          <p>Schedule equipment confidently and keep a clear view of what is coming next.</p>
+        </div>
+        <Link className="button button-primary" to="/admin/rentals">+ New event</Link>
+      </section>
+
+      <section className="stats-grid">
+        {cards(data).map((card) => (
+          <article className={`stat-card tone-${card.tone}`} key={card.label}>
+            <span>{card.label}</span>
+            <strong>{card.value}</strong>
+            <small>{card.hint}</small>
+          </article>
+        ))}
+      </section>
+
+      <section className="panel">
+        <div className="panel-header">
+          <div>
+            <span className="eyebrow">NEXT ON THE ROAD</span>
+            <h3>Upcoming events</h3>
+          </div>
+          <Link className="text-link" to="/admin/calendar">Open calendar →</Link>
         </div>
 
-        <div className="card-body">
-          {/* STAT CARDS */}
-          <div className="row g-3">
-            {statCards.map((card, i) => (
-              <div key={i} className="col-6 col-md-3">
-                <div className={`card border-${card.color} shadow-sm h-100`}>
-                  <div className="card-body text-center">
-                    <div className={`h4 mb-1 text-${card.color}`}>
-                      {loading ? <div className="spinner-border spinner-border-sm" /> : card.value}
-                    </div>
-                    <small className="text-muted">{card.label}</small>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* LOW STOCK */}
-          <h6 className="text-danger mt-4 mb-2">⚠ Product Stock Details (Details 3)</h6>
-          <div className="table-responsive">
-            <table className="table table-bordered table-hover align-middle">
-              <thead className="table-light">
+        {data.upcomingRentals.length === 0 ? (
+          <div className="empty-inline">No upcoming events yet. Create the first booking to get started.</div>
+        ) : (
+          <div className="table-wrap">
+            <table>
+              <thead>
                 <tr>
-                  <th>Product</th>
-                  <th>Size</th>
-                  <th>Color</th>
-                  <th>Stock</th>
+                  <th>Date & time</th>
+                  <th>Responsible</th>
+                  <th>Equipment</th>
+                  <th>Employee</th>
+                  <th>Status</th>
+                  <th>Balance</th>
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
-                  <tr><td colSpan="4" className="text-center text-muted">Loading...</td></tr>
-                ) : lowStock.length === 0 ? (
-                  <tr><td colSpan="4" className="text-center text-muted">Product stock Details</td></tr>
-                ) : (
-                  lowStock.map((v) => (
-                    <tr key={v.id}>
-                      <td>{v.product?.name}</td>
-                      <td>{v.size?.name}</td>
-                      <td>{v.color?.name}</td>
-                      <td className="text-danger fw-bold">{v.stock}</td>
-                    </tr>
-                  ))
-                )}
+                {data.upcomingRentals.map((rental) => (
+                  <tr key={rental.id}>
+                    <td>
+                      <strong>{formatEventDate(rental.startAt, { day: "2-digit", month: "short", year: "numeric" })}</strong>
+                      <small>{formatEventDate(rental.startAt, { hour: "2-digit", minute: "2-digit" })} – {formatEventDate(rental.endAt, { hour: "2-digit", minute: "2-digit" })}</small>
+                    </td>
+                    <td><strong>{rental.customer.name}</strong><small>{rental.customer.contact}</small></td>
+                    <td>{rental.items.flatMap((item) => item.units.map((unit) => unit.identifier)).join(", ")}</td>
+                    <td>{rental.employees.map((employee) => employee.name).join(", ")}</td>
+                    <td><StatusBadge status={rental.status} /></td>
+                    <td>{formatCurrency(rental.remainingAmountCents)}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </>
+        )}
+      </section>
+    </div>
   );
 }
-
-

@@ -1,139 +1,89 @@
-import { useState, useEffect } from "react";
-import { showError } from "../utils/alert.utils";
+import { useCallback, useEffect, useState } from "react";
+import { EmptyBlock, ErrorBlock, LoadingBlock, StatusBadge } from "../components/RentalUI";
+import { formatCurrency, formatEventDate, toLocalDateKey } from "../domain/rental-utils";
 import api from "../services/axios";
+import { getApiError } from "../services/errors";
 
 export default function Reports() {
-  const [monthly, setMonthly] = useState([]);
-  const [topProducts, setTopProducts] = useState([]);
-  const [overdue, setOverdue] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [month, setMonth] = useState(toLocalDateKey(new Date()).slice(0, 7));
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        setLoading(true);
-        const [r1, r2, r3] = await Promise.all([
-          api.get("/api/admin/revenue"),
-          api.get("/api/admin/products/top"),
-          api.get("/api/admin/rentals/overdue"),
-        ]);
-        setMonthly(r1.data.result.monthly || []);
-        setTopProducts(r2.data.result || []);
-        setOverdue(r3.data.result.rentals || []);
-      } catch (e) {
-        showError(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAll();
-  }, []);
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await api.get("/api/reports/monthly", { params: { month } });
+      setReport(response.data.result);
+    } catch (requestError) {
+      setError(getApiError(requestError));
+    } finally {
+      setLoading(false);
+    }
+  }, [month]);
 
-  const maxRevenue = Math.max(...monthly.map((m) => m.revenue), 1);
+  useEffect(() => { void load(); }, [load]);
+
+  if (loading) return <LoadingBlock label="Compiling monthly report" />;
+  if (error) return <ErrorBlock message={error} onRetry={load} />;
 
   return (
-    <>
-      {/* REVENUE CHART */}
-      <div className="card mt-3 shadow-sm">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <span>Details (12 Details)</span>
-          {loading && <div className="spinner-border spinner-border-sm text-secondary" />}
+    <div className="page-stack report-page">
+      <section className="panel report-toolbar no-print">
+        <div>
+          <span className="eyebrow">REPORT PERIOD</span>
+          <h3>Monthly performance</h3>
         </div>
-        <div className="card-body">
-          {loading ? (
-            <div className="text-center text-muted">Loading...</div>
-          ) : (
-            <div className="d-flex align-items-end gap-2" style={{ height: 200, overflowX: "auto" }}>
-              {monthly.map((m) => (
-                <div key={m.month} className="d-flex flex-column align-items-center" style={{ minWidth: 55 }}>
-                  <small className="text-muted mb-1" style={{ fontSize: 11 }}>
-                    ${(m.revenue / 1000).toFixed(0)}k
-                  </small>
-                  <div
-                    className="bg-primary rounded-top w-100"
-                    style={{ height: `${Math.max((m.revenue / maxRevenue) * 160, 4)}px` }}
-                  />
-                  <small className="text-muted mt-1" style={{ fontSize: 10 }}>{m.month.slice(5)}</small>
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="filter-row">
+          <label>Month<input type="month" value={month} onChange={(event) => setMonth(event.target.value)} /></label>
+          <button className="button button-primary" onClick={() => window.print()}>Print report</button>
         </div>
-      </div>
+      </section>
 
-      {/* TOP PRODUCTS */}
-      <div className="card mt-3 shadow-sm">
-        <div className="card-header">Product (Top 10)</div>
-        <div className="card-body p-0">
-          <div className="table-responsive">
-            <table className="table table-bordered table-hover align-middle mb-0">
-              <thead className="table-light">
-                <tr>
-                  <th>#</th>
-                  <th>Product</th>
-                  <th>Size</th>
-                  <th>Color</th>
-                  <th>Rental</th>
-                </tr>
-              </thead>
+      <header className="print-header">
+        <div><span className="eyebrow">RENTAL BOOK EQUIPMENT</span><h1>Monthly rental report</h1></div>
+        <p>Period: {month}</p>
+      </header>
+
+      <section className="stats-grid report-stats">
+        <article className="stat-card tone-violet"><span>Total events</span><strong>{report.totals.events}</strong><small>All non-cancelled bookings</small></article>
+        <article className="stat-card tone-blue"><span>Future events</span><strong>{report.totals.futureEvents}</strong><small>Events still ahead</small></article>
+        <article className="stat-card tone-neutral"><span>Amount charged</span><strong>{formatCurrency(report.totals.chargedAmountCents)}</strong><small>Contracted revenue</small></article>
+        <article className="stat-card tone-green"><span>Amount received</span><strong>{formatCurrency(report.totals.receivedAmountCents)}</strong><small>Confirmed payments</small></article>
+        <article className="stat-card tone-amber"><span>Remaining balance</span><strong>{formatCurrency(report.totals.remainingAmountCents)}</strong><small>Still expected</small></article>
+      </section>
+
+      <section className="panel report-table">
+        <div className="panel-header"><div><span className="eyebrow">EVENT LEDGER</span><h3>Monthly detail</h3></div><span className="record-count">{report.rentals.length} records</span></div>
+        {report.rentals.length === 0 ? (
+          <EmptyBlock title="No events in this month" text="Choose another period or create a new booking." />
+        ) : (
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Time</th><th>Responsible</th><th>Contact</th><th>Employee</th><th>Equipment</th><th>Charged</th><th>Received</th><th>Remaining</th><th>Status</th></tr></thead>
               <tbody>
-                {loading ? (
-                  <tr><td colSpan="5" className="text-center text-muted">Loading...</td></tr>
-                ) : topProducts.length === 0 ? (
-                  <tr><td colSpan="5" className="text-center text-muted">No data</td></tr>
-                ) : (
-                  topProducts.map((v, i) => (
-                    <tr key={v.id}>
-                      <td>{i + 1}</td>
-                      <td>{v.product?.name}</td>
-                      <td>{v.size?.name}</td>
-                      <td>{v.color?.name}</td>
-                      <td><span className="badge bg-primary">{v.totalRented}</span></td>
-                    </tr>
-                  ))
-                )}
+                {report.rentals.map((rental) => (
+                  <tr key={rental.id}>
+                    <td>{formatEventDate(rental.startAt, { day: "2-digit", month: "2-digit", year: "numeric" })}</td>
+                    <td>{formatEventDate(rental.startAt, { hour: "2-digit", minute: "2-digit" })} – {formatEventDate(rental.endAt, { hour: "2-digit", minute: "2-digit" })}</td>
+                    <td><strong>{rental.customer.name}</strong></td>
+                    <td>{rental.customer.contact}</td>
+                    <td>{rental.employees.map((employee) => employee.name).join(", ")}</td>
+                    <td>{rental.items.flatMap((item) => item.units.map((unit) => unit.identifier)).join(", ")}</td>
+                    <td>{formatCurrency(rental.finalAmountCents)}</td>
+                    <td>{formatCurrency(rental.receivedAmountCents)}</td>
+                    <td>{formatCurrency(rental.remainingAmountCents)}</td>
+                    <td><StatusBadge status={rental.status} /></td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
+        )}
+      </section>
 
-      {/* OVERDUE */}
-      <div className="card mt-3 shadow-sm">
-        <div className="card-header text-danger">List</div>
-        <div className="card-body p-0">
-          <div className="table-responsive">
-            <table className="table table-bordered table-hover align-middle mb-0">
-              <thead className="table-light">
-                <tr>
-                  <th>Code</th>
-                  <th>Customer</th>
-                  <th>Details (Date)</th>
-                  <th>Penalty</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr><td colSpan="4" className="text-center text-muted">Loading...</td></tr>
-                ) : overdue.length === 0 ? (
-                  <tr><td colSpan="4" className="text-center text-muted">List</td></tr>
-                ) : (
-                  overdue.map((r) => (
-                    <tr key={r.id}>
-                      <td>{r.code}</td>
-                      <td>{r.user?.name}</td>
-                      <td className="text-danger fw-bold">{r.daysOverdue}</td>
-                      <td>${r.estimatedLateFee?.toLocaleString()}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </>
+      <footer className="print-footer">Generated on {new Date().toLocaleString("en-GB")}</footer>
+    </div>
   );
 }
-
-

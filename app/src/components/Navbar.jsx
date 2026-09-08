@@ -1,32 +1,27 @@
 import { useLocation } from "react-router-dom";
 
-export default function Navbar() {
-  const location = useLocation();
+const titles = {
+  "/admin": ["Overview", "Your event operation at a glance"],
+  "/admin/calendar": ["Calendar", "Equipment availability across every event"],
+  "/admin/rentals": ["Events", "Create and manage equipment rentals"],
+  "/admin/reports": ["Reports", "Monthly financial and operational summary"],
+};
 
-  const pathName =
-    location.pathname.replaceAll("/", " ").trim().toUpperCase() || "HOME";
+export default function Navbar({ onMenu }) {
+  const location = useLocation();
+  const [title, subtitle] = titles[location.pathname] ?? titles["/admin"];
 
   return (
-    <nav className="app-header navbar navbar-expand bg-body">
-      <div className="container-fluid">
-        {/*begin::Start Navbar Links*/}
-        <ul className="navbar-nav">
-          <li className="nav-item">
-            <a
-              className="nav-link"
-              data-lte-toggle="sidebar"
-              href="#"
-              role="button"
-            >
-              <i className="bi bi-list"></i>
-            </a>
-          </li>
-          <li className="nav-item d-none d-md-block">
-            <span className="nav-link">{pathName}</span>
-          </li>
-        </ul>
-        {/*end::Start Navbar Links*/}
+    <header className="topbar">
+      <button className="menu-button" onClick={onMenu} aria-label="Open navigation">☰</button>
+      <div>
+        <h1>{title}</h1>
+        <p>{subtitle}</p>
       </div>
-    </nav>
+      <div className="topbar-date">
+        <span>Today</span>
+        <strong>{new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short" }).format(new Date())}</strong>
+      </div>
+    </header>
   );
 }
