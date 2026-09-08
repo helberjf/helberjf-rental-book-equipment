@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../services/axios";
 import { getApiError } from "../services/errors";
@@ -50,7 +50,7 @@ export default function Signin() {
           <label>Email address<input autoFocus type="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
           <label>Password<input type="password" required minLength="8" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
           <button className="button button-primary button-wide" disabled={saving}>{saving ? "Signing in…" : "Sign in"}</button>
-          <small>Access is limited to authorized staff.</small>
+          <small>Access is limited to authorized staff. <Link className="text-link" to="/">Back to site</Link></small>
         </form>
       </section>
     </main>
