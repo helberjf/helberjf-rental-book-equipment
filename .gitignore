@@ -27,6 +27,7 @@ api/dist/
 .parcel-cache/
 .eslintcache
 coverage/
+.worktrees/
 
 # OS and editors
 .DS_Store
