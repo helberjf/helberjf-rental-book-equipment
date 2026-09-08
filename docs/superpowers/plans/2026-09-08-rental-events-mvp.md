@@ -13,7 +13,7 @@
 ## File Structure
 
 - Modify `api/prisma/schema.prisma`: replace the clothing/marketplace schema with the generic rental schema.
-- Create `api/prisma/seed.ts`: seed admin user, categories, Robo LED product, Robo 01-08 units, Balanco LED product, Balanco LED 01 unit, and sample employees.
+- Create `api/prisma/seed.ts`: seed admin user, categories, LED Robot product, Robot 01-08 units, LED Swing product, LED Swing 01 unit, and sample employees.
 - Create `api/src/domain/rentals/rental-financials.ts`: calculate received and remaining amounts from confirmed payments.
 - Create `api/src/domain/rentals/rental-financials.test.ts`: test financial calculations.
 - Extend `api/src/domain/availability/availability.service.test.ts`: add the real two-event robot scenario.
@@ -135,18 +135,18 @@ git commit -m "feat: add rental financial calculations"
 Add this test to `api/src/domain/availability/availability.service.test.ts`:
 
 ```ts
-it("allows Robo 01 in two same-day events when the first blocked interval ends before the second starts", () => {
+it("allows Robot 01 in two same-day events when the first blocked interval ends before the second starts", () => {
   const result = AvailabilityService.checkAvailability(
     baseInput({
       units: [
-        { id: 1, productId: 1, identifier: "Robo 01", status: "AVAILABLE", active: true },
-        { id: 2, productId: 1, identifier: "Robo 02", status: "AVAILABLE", active: true },
-        { id: 3, productId: 1, identifier: "Robo 03", status: "AVAILABLE", active: true },
-        { id: 4, productId: 1, identifier: "Robo 04", status: "AVAILABLE", active: true },
-        { id: 5, productId: 1, identifier: "Robo 05", status: "AVAILABLE", active: true },
-        { id: 6, productId: 1, identifier: "Robo 06", status: "AVAILABLE", active: true },
-        { id: 7, productId: 1, identifier: "Robo 07", status: "AVAILABLE", active: true },
-        { id: 8, productId: 1, identifier: "Robo 08", status: "AVAILABLE", active: true },
+        { id: 1, productId: 1, identifier: "Robot 01", status: "AVAILABLE", active: true },
+        { id: 2, productId: 1, identifier: "Robot 02", status: "AVAILABLE", active: true },
+        { id: 3, productId: 1, identifier: "Robot 03", status: "AVAILABLE", active: true },
+        { id: 4, productId: 1, identifier: "Robot 04", status: "AVAILABLE", active: true },
+        { id: 5, productId: 1, identifier: "Robot 05", status: "AVAILABLE", active: true },
+        { id: 6, productId: 1, identifier: "Robot 06", status: "AVAILABLE", active: true },
+        { id: 7, productId: 1, identifier: "Robot 07", status: "AVAILABLE", active: true },
+        { id: 8, productId: 1, identifier: "Robot 08", status: "AVAILABLE", active: true },
       ],
       reservations: [
         reservation(1, "2026-09-20T14:00:00-03:00", "2026-09-20T17:00:00-03:00"),
@@ -157,7 +157,7 @@ it("allows Robo 01 in two same-day events when the first blocked interval ends b
     }),
   );
 
-  expect(result.availableUnits.map((unit) => unit.identifier)).toContain("Robo 01");
+  expect(result.availableUnits.map((unit) => unit.identifier)).toContain("Robot 01");
   expect(result.isAvailable).toBe(true);
 });
 ```
@@ -221,11 +221,11 @@ Seed must create:
 
 - one admin user;
 - category `Robos`;
-- product `Robo LED` with `trackIndividualUnits = true`;
-- units `Robo 01` through `Robo 08`;
+- product `LED Robot` with `trackIndividualUnits = true`;
+- units `Robot 01` through `Robot 08`;
 - category `Equipamentos LED`;
-- product `Balanco LED` with `trackIndividualUnits = true`;
-- unit `Balanco LED 01`;
+- product `LED Swing` with `trackIndividualUnits = true`;
+- unit `LED Swing 01`;
 - employees `Carlos`, `Lucas`, `Pedro`.
 
 - [ ] **Step 5: Commit**

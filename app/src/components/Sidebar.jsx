@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const items = [
   { to: "/admin", end: true, icon: "◫", label: "Overview" },
@@ -8,6 +9,7 @@ const items = [
 ];
 
 export default function Sidebar({ open, onClose }) {
+  const { user, signOut } = useAuth();
   return (
     <aside className={`sidebar ${open ? "is-open" : ""}`}>
       <div className="brand">
@@ -40,6 +42,10 @@ export default function Sidebar({ open, onClose }) {
           <strong>9 tracked units</strong>
           <small>8 LED robots · 1 LED swing</small>
         </div>
+      </div>
+      <div className="sidebar-user">
+        <div><strong>{user?.name}</strong><small>{user?.role}</small></div>
+        <button onClick={signOut} title="Sign out" aria-label="Sign out">↪</button>
       </div>
     </aside>
   );

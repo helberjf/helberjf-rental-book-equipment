@@ -2,6 +2,8 @@ import cors from "cors";
 import express, { type ErrorRequestHandler } from "express";
 import { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
+import { createRequireAuth } from "./middlewares/auth";
+import { authRouter, jwtSecret } from "./routes/auth.routes";
 import { rentalRouter } from "./routes/rental.routes";
 
 export const app = express();
@@ -18,7 +20,8 @@ app.use(express.json({ limit: "1mb" }));
 app.get("/ping", (_request, response) => {
   response.json({ ok: true });
 });
-app.use("/api", rentalRouter);
+app.use("/api/auth", authRouter);
+app.use("/api", createRequireAuth(jwtSecret), rentalRouter);
 
 app.use((_request, response) => {
   response.status(404).json({ success: false, message: "Route not found" });

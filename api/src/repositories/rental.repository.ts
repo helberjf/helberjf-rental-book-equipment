@@ -212,6 +212,36 @@ export class PrismaRentalRepository implements RentalRepository {
 
   async confirm(id: number, reservations: ReservationDraft[]): Promise<RentalRecord> {
     return this.client.$transaction(async (transaction) => {
+      const individualReservations = reservations
+        .filter(
+          (reservation): reservation is ReservationDraft & { productUnitId: number } =>
+            reservation.productUnitId !== null,
+        )
+        .sort((left, right) => left.productUnitId - right.productUnitId);
+
+      // A transaction-scoped lock per physical unit serializes concurrent confirmations.
+      for (const reservation of individualReservations) {
+        await transaction.$queryRaw`SELECT pg_advisory_xact_lock(${reservation.productUnitId})`;
+      }
+
+      if (individualReservations.length > 0) {
+        const conflict = await transaction.equipmentReservation.findFirst({
+          where: {
+            status: "ACTIVE",
+            rentalId: { not: id },
+            OR: individualReservations.map((reservation) => ({
+              productUnitId: reservation.productUnitId,
+              blockedFrom: { lt: reservation.blockedUntil },
+              blockedUntil: { gt: reservation.blockedFrom },
+            })),
+          },
+          select: { id: true },
+        });
+        if (conflict) {
+          throw new Error("Selected equipment is already reserved for this time");
+        }
+      }
+
       await transaction.equipmentReservation.createMany({
         data: reservations.map((reservation) => ({
           rentalId: id,

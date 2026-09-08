@@ -1,181 +1,58 @@
 import { useState } from "react";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
-import { showSuccess, showError } from "../utils/alert.utils";
 import api from "../services/axios";
+import { getApiError } from "../services/errors";
 
 export default function Signin() {
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [saving, setSaving] = useState(false);
-  const { setUser } = useAuth();
+  const { user, signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [email, setEmail] = useState("admin@rentalbook.local");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const handleChange = (key, value) =>
-    setForm((prev) => ({ ...prev, [key]: value }));
+  if (user) return <Navigate to="/admin" replace />;
 
-  const handleSubmit = async () => {
-    if (saving) return;
+  const submit = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
     try {
-      setSaving(true);
-      const res = await api.post("/api/auth/signIn", {
-        email: form.email,
-        password: form.password,
-      });
-
-      const userData = res.data.result;
-      localStorage.setItem("token", userData.token);
-
-      if (userData.role !== "ADMIN") {
-        showError("Access denied");
-        return;
-      }
-
-      setUser(userData);
-      showSuccess("Operation completed successfully");
-      navigate("/dashboard");
-    } catch (e) {
-      showError(e);
+      const response = await api.post("/api/auth/login", { email, password });
+      signIn(response.data.result.user, response.data.result.token);
+      navigate(location.state?.from || "/admin", { replace: true });
+    } catch (requestError) {
+      setError(getApiError(requestError));
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="bg-light d-flex align-items-center justify-content-center vh-100">
-      <div
-        className="card border-0 shadow-sm"
-        style={{ width: "380px", borderRadius: "16px" }}
-      >
-        <div className="card-body p-4 p-md-5">
-          <h4 className="fw-semibold mb-1 text-center">Details</h4>
-          <p
-            className="text-muted text-center mb-4"
-            style={{ fontSize: "14px" }}
-          >
-            Please enter
-          </p>
-
-          <div className="mb-3">
-            <label className="form-label small text-muted">Email</label>
-            <input
-              type="email"
-              className="form-control"
-              placeholder="you@example.com"
-              value={form.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              style={{ height: "44px", borderRadius: "10px" }}
-              disabled={saving}
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="form-label small text-muted">Password</label>
-            <input
-              type="password"
-              className="form-control"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={(e) => handleChange("password", e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-              style={{ height: "44px", borderRadius: "10px" }}
-              disabled={saving}
-            />
-          </div>
-
-          <button
-            className="btn btn-dark w-100 mb-3"
-            style={{ height: "44px", borderRadius: "10px", fontWeight: "500" }}
-            onClick={handleSubmit}
-            disabled={saving}
-          >
-            {saving ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" />
-                Details...
-              </>
-            ) : (
-              "Sign in"
-            )}
-          </button>
-
-          <p
-            className="text-center text-muted mb-0"
-            style={{ fontSize: "14px" }}
-          >
-            Details?{" "}
-            <Link
-              to="/signup"
-              className="text-dark fw-semibold text-decoration-none"
-            >
-              Sign up
-            </Link>
-          </p>
-
-          <div
-            className="mt-4 p-3 rounded-3"
-            style={{ backgroundColor: "#f8f9fa", border: "1px dashed #dee2e6" }}
-          >
-            <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
-              <p
-                className="text-muted mb-0"
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                🔑 Details
-              </p>
-              <span
-                className="badge"
-                style={{
-                  fontSize: "10px",
-                  backgroundColor: "#212529",
-                  color: "#fff",
-                  borderRadius: "6px",
-                  padding: "3px 8px",
-                }}
-              >
-                ADMIN
-              </span>
-            </div>
-            <div style={{ fontSize: "13px" }}>
-              <div className="d-flex justify-content-between mb-1">
-                <span className="text-muted">Email</span>
-                <span
-                  className="fw-semibold text-dark"
-                  style={{ cursor: "pointer", userSelect: "all" }}
-                  onClick={() => handleChange("email", "admin@gmaio.com")}
-                >
-                  admin@gmail.com
-                </span>
-              </div>
-              <div className="d-flex justify-content-between">
-                <span className="text-muted">Password</span>
-                <span
-                  className="fw-semibold text-dark"
-                  style={{ cursor: "pointer", userSelect: "all" }}
-                  onClick={() => handleChange("password", "Admin11111111")}
-                >
-                  Admin11111111
-                </span>
-              </div>
-            </div>
-            <button
-              className="btn btn-outline-secondary w-100 mt-2"
-              style={{ fontSize: "12px", height: "32px", borderRadius: "8px" }}
-              onClick={() => {
-                handleChange("email", "admin@gmail.com");
-                handleChange("password", "Admin11111111");
-              }}
-            >
-              Details
-            </button>
-          </div>
+    <main className="login-page">
+      <section className="login-visual">
+        <div className="brand login-brand"><div className="brand-mark">RB</div><div><strong>Rental Book</strong><span>Event equipment</span></div></div>
+        <div>
+          <span className="eyebrow">CONTROL WITH CONFIDENCE</span>
+          <h1>One calendar for every event, unit and payment.</h1>
+          <p>Manage eight LED robots and the LED swing without schedule conflicts or missing balances.</p>
         </div>
-      </div>
-    </div>
+        <div className="login-inventory"><span>8</span> LED robots <i /> <span>1</span> LED swing</div>
+      </section>
+      <section className="login-form-wrap">
+        <form className="login-form" onSubmit={submit}>
+          <span className="eyebrow">ADMIN ACCESS</span>
+          <h2>Welcome back</h2>
+          <p>Sign in to open the rental management workspace.</p>
+          {error && <div className="notice notice-error">{error}</div>}
+          <label>Email address<input autoFocus type="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+          <label>Password<input type="password" required minLength="8" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
+          <button className="button button-primary button-wide" disabled={saving}>{saving ? "Signing in…" : "Sign in"}</button>
+          <small>Access is limited to authorized staff.</small>
+        </form>
+      </section>
+    </main>
   );
 }
-
-

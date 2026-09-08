@@ -10,7 +10,7 @@ import type {
 
 const product: ProductSnapshot = {
   id: 1,
-  name: "Robo LED",
+  name: "LED Robot",
   trackIndividualUnits: true,
   quantity: 8,
   bufferBeforeMinutes: 0,
@@ -18,9 +18,9 @@ const product: ProductSnapshot = {
 };
 
 const units: ProductUnitSnapshot[] = [
-  { id: 1, productId: 1, identifier: "Robo 01", status: "AVAILABLE", active: true },
-  { id: 2, productId: 1, identifier: "Robo 02", status: "AVAILABLE", active: true },
-  { id: 3, productId: 1, identifier: "Robo 03", status: "AVAILABLE", active: true },
+  { id: 1, productId: 1, identifier: "Robot 01", status: "AVAILABLE", active: true },
+  { id: 2, productId: 1, identifier: "Robot 02", status: "AVAILABLE", active: true },
+  { id: 3, productId: 1, identifier: "Robot 03", status: "AVAILABLE", active: true },
 ];
 
 const baseInput = (overrides: Partial<AvailabilityInput> = {}): AvailabilityInput => ({
@@ -60,7 +60,7 @@ describe("AvailabilityService", () => {
       }),
     );
 
-    expect(result.availableUnits.map((unit) => unit.identifier)).toContain("Robo 01");
+    expect(result.availableUnits.map((unit) => unit.identifier)).toContain("Robot 01");
     expect(result.unavailableUnits).toHaveLength(0);
     expect(result.available).toBe(3);
   });
@@ -76,9 +76,9 @@ describe("AvailabilityService", () => {
       }),
     );
 
-    expect(result.availableUnits.map((unit) => unit.identifier)).not.toContain("Robo 01");
+    expect(result.availableUnits.map((unit) => unit.identifier)).not.toContain("Robot 01");
     expect(result.unavailableUnits).toContainEqual(
-      expect.objectContaining({ identifier: "Robo 01", reason: "RESERVED" }),
+      expect.objectContaining({ identifier: "Robot 01", reason: "RESERVED" }),
     );
   });
 
@@ -93,7 +93,7 @@ describe("AvailabilityService", () => {
       }),
     );
 
-    expect(result.availableUnits.map((unit) => unit.identifier)).toContain("Robo 01");
+    expect(result.availableUnits.map((unit) => unit.identifier)).toContain("Robot 01");
   });
 
   it("uses product buffers to calculate the blocked interval", () => {
@@ -111,7 +111,7 @@ describe("AvailabilityService", () => {
     expect(result.blockedFrom.toISOString()).toBe("2026-09-20T17:30:00.000Z");
     expect(result.blockedUntil.toISOString()).toBe("2026-09-20T20:00:00.000Z");
     expect(result.unavailableUnits).toContainEqual(
-      expect.objectContaining({ identifier: "Robo 01", reason: "RESERVED" }),
+      expect.objectContaining({ identifier: "Robot 01", reason: "RESERVED" }),
     );
   });
 
@@ -131,14 +131,14 @@ describe("AvailabilityService", () => {
     );
 
     expect(result.unavailableUnits).toContainEqual(
-      expect.objectContaining({ identifier: "Robo 02", reason: "MAINTENANCE" }),
+      expect.objectContaining({ identifier: "Robot 02", reason: "MAINTENANCE" }),
     );
   });
 
   it("calculates quantity availability by maximum concurrent reserved quantity", () => {
     const chairProduct: ProductSnapshot = {
       id: 2,
-      name: "Cadeira Tiffany",
+      name: "Tiffany Chair",
       trackIndividualUnits: false,
       quantity: 50,
       bufferBeforeMinutes: 0,
@@ -191,21 +191,21 @@ describe("AvailabilityService", () => {
       }),
     );
 
-    expect(result.map((unit) => unit.identifier)).toEqual(["Robo 02", "Robo 03"]);
+    expect(result.map((unit) => unit.identifier)).toEqual(["Robot 02", "Robot 03"]);
   });
 
-  it("allows Robo 01 in two same-day events when the first blocked interval ends before the second starts", () => {
+  it("allows Robot 01 in two same-day events when the first blocked interval ends before the second starts", () => {
     const result = AvailabilityService.checkAvailability(
       baseInput({
         units: [
-          { id: 1, productId: 1, identifier: "Robo 01", status: "AVAILABLE", active: true },
-          { id: 2, productId: 1, identifier: "Robo 02", status: "AVAILABLE", active: true },
-          { id: 3, productId: 1, identifier: "Robo 03", status: "AVAILABLE", active: true },
-          { id: 4, productId: 1, identifier: "Robo 04", status: "AVAILABLE", active: true },
-          { id: 5, productId: 1, identifier: "Robo 05", status: "AVAILABLE", active: true },
-          { id: 6, productId: 1, identifier: "Robo 06", status: "AVAILABLE", active: true },
-          { id: 7, productId: 1, identifier: "Robo 07", status: "AVAILABLE", active: true },
-          { id: 8, productId: 1, identifier: "Robo 08", status: "AVAILABLE", active: true },
+          { id: 1, productId: 1, identifier: "Robot 01", status: "AVAILABLE", active: true },
+          { id: 2, productId: 1, identifier: "Robot 02", status: "AVAILABLE", active: true },
+          { id: 3, productId: 1, identifier: "Robot 03", status: "AVAILABLE", active: true },
+          { id: 4, productId: 1, identifier: "Robot 04", status: "AVAILABLE", active: true },
+          { id: 5, productId: 1, identifier: "Robot 05", status: "AVAILABLE", active: true },
+          { id: 6, productId: 1, identifier: "Robot 06", status: "AVAILABLE", active: true },
+          { id: 7, productId: 1, identifier: "Robot 07", status: "AVAILABLE", active: true },
+          { id: 8, productId: 1, identifier: "Robot 08", status: "AVAILABLE", active: true },
         ],
         reservations: [
           reservation(1, "2026-09-20T14:00:00-03:00", "2026-09-20T17:00:00-03:00"),
@@ -216,7 +216,7 @@ describe("AvailabilityService", () => {
       }),
     );
 
-    expect(result.availableUnits.map((unit) => unit.identifier)).toContain("Robo 01");
+    expect(result.availableUnits.map((unit) => unit.identifier)).toContain("Robot 01");
     expect(result.isAvailable).toBe(true);
   });
 });

@@ -1,16 +1,20 @@
 import { Navigate, createBrowserRouter, RouterProvider } from "react-router-dom";
 import BaseLayout from "./layouts/BaseLayout";
+import AuthGuard from "./components/AuthGuard";
+import { AuthProvider } from "./context/AuthContext";
 import Calendar from "./pages/Calendar";
 import Dashboard from "./pages/Dashboard";
 import Rentals from "./pages/Rentals";
 import Reports from "./pages/Reports";
+import Signin from "./pages/Signin";
 import "./App.css";
 
 const router = createBrowserRouter([
-  { path: "/", element: <Navigate to="/admin" replace /> },
+  { path: "/", element: <Navigate to="/login" replace /> },
+  { path: "/login", element: <Signin /> },
   {
     path: "/admin",
-    element: <BaseLayout />,
+    element: <AuthGuard><BaseLayout /></AuthGuard>,
     children: [
       { index: true, element: <Dashboard /> },
       { path: "calendar", element: <Calendar /> },
@@ -25,5 +29,5 @@ const router = createBrowserRouter([
 ]);
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  return <AuthProvider><RouterProvider router={router} /></AuthProvider>;
 }
