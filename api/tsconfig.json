@@ -10,6 +10,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "es2022",
+    "esModuleInterop": true,
     "types": ["node"],
     // For nodejs:
     // "lib": ["esnext"],
