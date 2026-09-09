@@ -20,6 +20,8 @@ export interface CreateRentalInput {
   notes?: string | undefined;
   finalAmountCents: number;
   employeeIds: number[];
+  employeeFees?: Array<{ employeeId: number; costCents: number }> | undefined;
+  finalNotes?: string | undefined;
   items: Array<{
     productId: number;
     quantity: number;
@@ -45,6 +47,7 @@ export interface RentalRecord {
   endAt: Date;
   venue?: string | null | undefined;
   notes?: string | null | undefined;
+  finalNotes?: string | null | undefined;
   finalAmountCents: number;
   customer: {
     id: number;
@@ -52,7 +55,7 @@ export interface RentalRecord {
     contact: string;
     email?: string | null | undefined;
   };
-  employees: Array<{ id: number; name: string; contact?: string | null | undefined }>;
+  employees: Array<{ id: number; name: string; contact?: string | null | undefined; costCents?: number }>;
   items: Array<{
     id: number;
     productId: number;
@@ -102,6 +105,7 @@ export interface RentalRepository {
 }
 
 export type RentalView = RentalRecord & {
+  staffCostCents: number;
   receivedAmountCents: number;
   remainingAmountCents: number;
 };
@@ -138,6 +142,7 @@ const assertCreateInput = (input: CreateRentalInput) => {
 
 const withFinancials = (rental: RentalRecord): RentalView => ({
   ...rental,
+  staffCostCents: rental.employees.reduce((sum, employee) => sum + (employee.costCents ?? 0), 0),
   ...calculateRentalFinancials({
     finalAmountCents: rental.finalAmountCents,
     payments: rental.payments,
@@ -257,6 +262,7 @@ export class RentalService {
           events: total.events + 1,
           futureEvents: total.futureEvents + (rental.startAt > now ? 1 : 0),
           chargedAmountCents: total.chargedAmountCents + rental.finalAmountCents,
+          staffCostCents: total.staffCostCents + rental.staffCostCents,
           receivedAmountCents: total.receivedAmountCents + rental.receivedAmountCents,
           remainingAmountCents: total.remainingAmountCents + rental.remainingAmountCents,
         }),
@@ -264,6 +270,7 @@ export class RentalService {
           events: 0,
           futureEvents: 0,
           chargedAmountCents: 0,
+          staffCostCents: 0,
           receivedAmountCents: 0,
           remainingAmountCents: 0,
         },

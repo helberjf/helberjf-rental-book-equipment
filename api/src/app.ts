@@ -46,7 +46,7 @@ const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => 
   }
 
   const message = error instanceof Error ? error.message : "Unexpected error";
-  const status = message.includes("already reserved") ? 409 : message.includes("not found") ? 404 : 400;
+  const status = message.includes("already reserved") || message.includes("upcoming bookings") ? 409 : message.includes("not found") ? 404 : 400;
   response.status(status).json({ success: false, message });
 };
 

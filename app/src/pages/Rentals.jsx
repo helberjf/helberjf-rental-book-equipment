@@ -6,6 +6,7 @@ import { EmptyBlock, LoadingBlock, StatusBadge } from "../components/RentalUI";
 import { buildEventRange, buildRentalItems, formatCurrency, formatEventDate, moneyToCents, toLocalDateKey } from "../domain/rental-utils";
 import api from "../services/axios";
 import { getApiError } from "../services/errors";
+import EventOperationsEditor from '../components/EventOperationsEditor';
 const initialForm = () => ({
   date: toLocalDateKey(new Date()),
   startTime: "18:00",
@@ -17,6 +18,8 @@ const initialForm = () => ({
   finalAmount: "",
   receivedAmount: "",
   notes: "",
+  finalNotes: "",
+  employeeFees: {},
   employeeIds: [],
   selectedUnitIds: []
 });
@@ -42,6 +45,7 @@ export default function Rentals() {
   const [status, setStatus] = useState("");
   const [paymentRental, setPaymentRental] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState("");
+  const [operationsRental, setOperationsRental] = useState(null);
   const loadRentals = useCallback(async () => {
     const response = await api.get("/api/rentals");
     setRentals(response.data.result);
@@ -133,6 +137,8 @@ export default function Rentals() {
         responsibleEmail: form.responsibleEmail,
         venue: form.venue,
         notes: form.notes,
+        finalNotes: form.finalNotes,
+        employeeFees: form.employeeIds.map(employeeId => ({employeeId,costCents:moneyToCents(form.employeeFees[employeeId] || 0)})),
         finalAmountCents: moneyToCents(chargedValue),
         employeeIds: form.employeeIds,
         items,
@@ -252,9 +258,14 @@ export default function Rentals() {
                   {employee.available === false && <small>{t("Booked")}</small>}
                 </label>)}
             </div>
+            {form.employeeIds.length > 0 && <div className="staff-fees">
+              <p className="field-help">{t('Internal cost, separate from the client charge.')}</p>
+              {employees.filter(employee => form.employeeIds.includes(employee.id)).map(employee => <label key={employee.id}>{employee.name}<input aria-label={`${t('Staff fee')}: ${employee.name}`} type="number" min="0" max="1000000" step="0.01" inputMode="decimal" placeholder="0.00" value={form.employeeFees[employee.id] ?? ''} onChange={e => setForm(current => ({...current,employeeFees:{...current.employeeFees,[employee.id]:e.target.value}}))} /></label>)}
+            </div>}
           </fieldset>
 
           <label>{t("Notes")} <span>{t("optional")}</span><textarea rows="3" placeholder={t("Access instructions, clothing, special requirements\u2026")} value={form.notes} onChange={e => updateForm("notes", e.target.value)} /></label>
+          <label>{t('Final event notes')} <span>{t('optional')}</span><textarea rows={3} maxLength={4000} placeholder={t('Record returns, incidents and final observations.')} value={form.finalNotes} onChange={e => updateForm('finalNotes',e.target.value)} /></label>
 
           <button className="button button-primary button-wide" disabled={saving || availabilityLoading}>
             {saving ? t("Saving event\u2026") : t("Create event and reserve equipment")}
@@ -268,6 +279,7 @@ export default function Rentals() {
             <div><dt>{t("Schedule")}</dt><dd>{form.date}<br />{form.startTime} – {form.endTime}</dd></div>
             <div><dt>{t("Equipment")}</dt><dd>{form.selectedUnitIds.length} {t("units")}</dd></div>
             <div><dt>{t("Staff")}</dt><dd>{form.employeeIds.length || t("Not assigned")}</dd></div>
+            <div><dt>{t('Staff cost')}</dt><dd>{formatCurrency(form.employeeIds.reduce((sum,id) => sum+moneyToCents(form.employeeFees[id]),0))}</dd></div>
             <div><dt>{t("Charged")}</dt><dd>{formatCurrency(moneyToCents(chargedValue))}</dd></div>
             <div><dt>{t("Remaining")}</dt><dd>{formatCurrency(Math.max(moneyToCents(chargedValue) - moneyToCents(form.receivedAmount), 0))}</dd></div>
           </dl>
@@ -307,14 +319,15 @@ export default function Rentals() {
                     hour: "2-digit",
                     minute: "2-digit"
                   })}</small></td>
-                    <td data-label={t("Responsible")}><strong>{rental.customer.name}</strong><small>{rental.customer.contact}</small></td>
+                    <td data-label={t("Responsible")}><strong>{rental.customer.name}</strong><small>{rental.customer.contact}</small>{rental.finalNotes && <small className="event-final-notes"><b>{t('Final event notes')}: </b>{rental.finalNotes}</small>}</td>
                     <td data-label={t("Equipment")}>{unitNames(rental) || t("Quantity item")}</td>
-                    <td data-label={t("Employee")}>{rental.employees.map(employee => employee.name).join(", ")}</td>
+                    <td data-label={t("Employee")}>{rental.employees.map(employee => <small key={employee.id}>{employee.name} · {formatCurrency(employee.costCents || 0)}</small>)}<strong>{t('Staff cost')}: {formatCurrency(rental.staffCostCents || 0)}</strong></td>
                     <td data-label={t("Charged")}>{formatCurrency(rental.finalAmountCents)}</td>
                     <td className="positive-value" data-label={t("Received")}>{formatCurrency(rental.receivedAmountCents)}</td>
                     <td className={rental.remainingAmountCents ? "warning-value" : "positive-value"} data-label={t("Remaining")}>{formatCurrency(rental.remainingAmountCents)}</td>
                     <td data-label={t("Status")}><StatusBadge status={rental.status} /></td>
                     <td className="row-actions">
+                      <button className="button button-small button-secondary" onClick={() => setOperationsRental(rental)}>{t('Edit costs and notes')}</button>
                       {rental.status === "DRAFT" && <button className="button button-small button-secondary" onClick={() => void confirmDraft(rental)}>{t("Confirm")}</button>}
                       {rental.status !== "CANCELLED" && rental.remainingAmountCents > 0 && <button className="button button-small button-ghost" onClick={() => setPaymentRental(rental)}>{t("+ Payment")}</button>}
                     </td>
@@ -323,6 +336,8 @@ export default function Rentals() {
             </table>
           </div>}
       </section>
+
+      {operationsRental && <EventOperationsEditor rental={operationsRental} onClose={() => setOperationsRental(null)} onSaved={async () => { await loadRentals(); setNotice(t('Event operations saved.')); }} />}
 
       {paymentRental && <div className="modal-backdrop" role="presentation" onMouseDown={() => setPaymentRental(null)}>
           <form className="modal-card" onSubmit={addPayment} onMouseDown={event => event.stopPropagation()}>

@@ -16,6 +16,16 @@ export default function Equipment() {
   const load = useCallback(async () => { try { setProducts((await api.get('/api/products')).data.result); } catch(e) { setError(getApiError(e)); } }, []);
   useEffect(() => { void load(); }, [load]);
   const update = (key,value) => setForm(current => ({ ...current,[key]:value }));
+  const edit = p => {
+    setEditing(p.id); setForm({ name:p.name, category:p.category, description:p.description || '', color:p.color || '', rate:(p.defaultRateCents/100).toFixed(2), identifiers:p.units.map(u => u.identifier).join('\n'), ...Object.fromEntries(measurements.map(([key]) => [key,p[key] ?? ''])) });
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+  const remove = async product => {
+    if (!window.confirm(`${t('Delete equipment')}: ${product.name}? ${t('History is preserved. Upcoming bookings prevent deletion.')}`)) return;
+    setBusy(true); setError(''); setNotice('');
+    try { await api.delete(`/api/products/${product.id}`); if (editing === product.id) { setEditing(null); setForm(initial); } setNotice('Equipment deleted.'); await load(); }
+    catch(e) { setError(getApiError(e)); } finally { setBusy(false); }
+  };
   const save = async e => {
     e.preventDefault(); setBusy(true); setError(''); setNotice('');
     try {
@@ -35,11 +45,10 @@ export default function Equipment() {
       <button className="button button-primary" disabled={busy}>{t(editing ? 'Save changes' : 'Add equipment')}</button>
     </form>
     <section className="panel"><div className="panel-header"><h2>{t('Equipment')}</h2><span className="record-count">{products.reduce((sum,p) => sum+p.units.length,0)} {t('units')}</span></div>
-      <div className="catalog-grid">{products.map(p => <article className="catalog-card" key={p.id}><span className="eyebrow">{p.category}</span><h3>{p.name}</h3><strong className="catalog-price">{formatCurrency(p.defaultRateCents)}</strong><small>{t('Standard rental rate per unit')}</small><p>{p.description}</p><dl className="spec-list">{measurements.map(([key,label]) => <div key={key}><dt>{t(label)}</dt><dd>{p[key] ?? '—'}</dd></div>)}<div><dt>{t('Color')}</dt><dd>{p.color || '—'}</dd></div></dl><div className="unit-tags">{p.units.map(u => <span key={u.id}>{u.identifier}</span>)}</div></article>)}</div>
-      <div className="edit-equipment-list">{products.map(p => <button key={p.id} className="button button-secondary" onClick={() => {
-        setEditing(p.id); setForm({ name:p.name, category:p.category, description:p.description || '', color:p.color || '', rate:(p.defaultRateCents/100).toFixed(2), identifiers:p.units.map(u => u.identifier).join('\n'), ...Object.fromEntries(measurements.map(([key]) => [key,p[key] ?? ''])) });
-        window.scrollTo({top:0,behavior:'smooth'});
-      }}>{t('Edit equipment')}: {p.name}</button>)}</div>
+      <div className="catalog-grid">{products.map(p => <article className="catalog-card" key={p.id}><span className="eyebrow">{p.category}</span><h3>{p.name}</h3><strong className="catalog-price">{formatCurrency(p.defaultRateCents)}</strong><small>{t('Standard rental rate per unit')}</small><p>{p.description}</p><dl className="spec-list">{measurements.map(([key,label]) => <div key={key}><dt>{t(label)}</dt><dd>{p[key] ?? '—'}</dd></div>)}<div><dt>{t('Color')}</dt><dd>{p.color || '—'}</dd></div></dl><div className="unit-tags">{p.units.map(u => <span key={u.id}>{u.identifier}</span>)}</div><div className="catalog-actions">
+        <button className="button button-secondary" disabled={busy} aria-label={`${t('Edit equipment')}: ${p.name}`} onClick={() => edit(p)}>{t('Edit')}</button>
+        <button className="button button-danger" disabled={busy} aria-label={`${t('Delete equipment')}: ${p.name}`} onClick={() => remove(p)}>{t('Delete')}</button>
+      </div></article>)}</div>
       {!products.length && <EmptyBlock title="No equipment yet" text="Register equipment to start booking." />}
     </section>
   </div>;

@@ -35,6 +35,7 @@ const toRecord = (rental: RentalWithRelations): RentalRecord => ({
   endAt: rental.endAt,
   venue: rental.venue,
   notes: rental.notes,
+  finalNotes: rental.finalNotes,
   finalAmountCents: rental.finalAmountCents,
   customer: {
     id: rental.customer.id,
@@ -42,10 +43,11 @@ const toRecord = (rental: RentalWithRelations): RentalRecord => ({
     contact: rental.customer.contact,
     email: rental.customer.email,
   },
-  employees: rental.employees.map(({ employee }) => ({
+  employees: rental.employees.map(({ employee, costCents }) => ({
     id: employee.id,
     name: employee.name,
     contact: employee.contact,
+    costCents,
   })),
   items: rental.items.map((item) => ({
     id: item.id,
@@ -102,6 +104,7 @@ export class PrismaRentalRepository implements RentalRepository {
         endAt: input.endAt,
         ...(input.venue ? { venue: input.venue } : {}),
         ...(input.notes ? { notes: input.notes } : {}),
+        ...(input.finalNotes ? { finalNotes: input.finalNotes } : {}),
         finalAmountCents: input.finalAmountCents,
         customer: {
           create: {
@@ -111,7 +114,7 @@ export class PrismaRentalRepository implements RentalRepository {
           },
         },
         employees: {
-          create: [...new Set(input.employeeIds)].map((employeeId) => ({ employeeId })),
+          create: [...new Set(input.employeeIds)].map((employeeId) => ({ employeeId, costCents: input.employeeFees?.find(fee => fee.employeeId === employeeId)?.costCents ?? 0 })),
         },
         items: {
           create: input.items.map((item) => ({
@@ -229,6 +232,10 @@ export class PrismaRentalRepository implements RentalRepository {
       const current = await transaction.rental.findUniqueOrThrow({ where: { id }, include: rentalInclude });
       if (current.status === "CONFIRMED" || current.status === "IN_PROGRESS") return toRecord(current);
       if (current.status !== "DRAFT") throw new Error("Only draft rentals can be confirmed");
+      // Product lifecycle and confirmation share locks, preventing deletion races.
+      const productIds = [...new Set(current.items.map(item => item.productId))].sort((a,b) => a-b);
+      for (const productId of productIds) await transaction.$executeRaw`SELECT pg_advisory_xact_lock(4, ${productId}::integer)`;
+      if (await transaction.product.count({where:{id:{in:productIds},active:true}}) !== productIds.length) throw new Error("Selected equipment is unavailable");
       await assertStaffAvailable(transaction, current.employees.map(e => e.employeeId), current.startAt, current.endAt, id);
       const individualReservations = reservations
         .filter(

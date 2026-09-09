@@ -181,6 +181,7 @@ model Rental {
   venue            String?
   finalAmountCents Int
   notes            String?
+  finalNotes       String?
   confirmedAt      DateTime?
   cancelledAt      DateTime?
   customer         Customer               @relation(fields: [customerId], references: [id])
@@ -227,6 +228,7 @@ model RentalItemUnit {
 model RentalEmployee {
   rentalId   Int
   employeeId Int
+  costCents  Int      @default(0)
   role       String   @default("Operator")
   rental     Rental   @relation(fields: [rentalId], references: [id], onDelete: Cascade)
   employee   Employee @relation(fields: [employeeId], references: [id])

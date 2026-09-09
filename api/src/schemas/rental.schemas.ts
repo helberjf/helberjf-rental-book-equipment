@@ -2,6 +2,12 @@ import { z } from "zod";
 
 const positiveId = z.coerce.number().int().positive();
 const moneyInCents = z.coerce.number().int().nonnegative();
+const employeeFeesSchema = z.array(z.object({ employeeId: positiveId, costCents: moneyInCents.max(100000000) })).max(100)
+  .refine(fees => new Set(fees.map(f => f.employeeId)).size === fees.length, 'Duplicate employee fees');
+export const eventOperationsSchema = z.object({
+  finalNotes: z.string().trim().max(4000).optional(),
+  employeeFees: employeeFeesSchema.optional(),
+}).refine(v => v.finalNotes !== undefined || v.employeeFees !== undefined, 'No changes provided');
 
 export const paymentSchema = z.object({
   amountCents: z.coerce.number().int().positive(),
@@ -26,6 +32,8 @@ export const createRentalSchema = z.object({
   responsibleEmail: z.union([z.email(), z.literal("")]).optional(),
   venue: z.string().trim().max(250).optional(),
   notes: z.string().trim().max(2000).optional(),
+  finalNotes: z.string().trim().max(4000).optional(),
+  employeeFees: employeeFeesSchema.default([]),
   finalAmountCents: moneyInCents,
   employeeIds: z.array(positiveId).min(1),
   items: z.array(rentalItemSchema).default([]),
@@ -34,6 +42,8 @@ export const createRentalSchema = z.object({
 }).refine((value) => value.endAt > value.startAt, {
   message: "End time must be after start time",
   path: ["endAt"],
+}).refine(value => value.employeeFees.every(fee => value.employeeIds.includes(fee.employeeId)), {
+  message: 'Employee fee must belong to an assigned employee', path: ['employeeFees'],
 });
 
 export const rentalListQuerySchema = z.object({

@@ -23,6 +23,12 @@ button:disabled { opacity:.55; cursor:not-allowed; }
 .catalog-card p, .catalog-card small { color:var(--muted); line-height:1.6; }
 .catalog-card small { display:block; }
 .catalog-price { font-size:1.5rem; color:var(--primary); }
+.catalog-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
+.catalog-actions .button { flex:1; }
+.button-danger { color:#aa263b; background:#fff0f2; border:1px solid #f3c3cc; }
+.staff-fees { display:grid; gap:12px; margin-top:16px; }
+.staff-fees label { display:grid; grid-template-columns:minmax(0,1fr) minmax(100px,150px); align-items:center; gap:12px; }
+.event-final-notes { white-space:pre-wrap; line-height:1.5; }
 .edit-equipment-list { display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
 .spec-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
 .spec-list dt { font-size:.75rem; color:var(--muted); }

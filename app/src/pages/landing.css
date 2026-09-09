@@ -125,7 +125,7 @@
 .lp-btn-login:hover { background: rgba(255, 255, 255, .13); border-color: rgba(255, 46, 136, .65); }
 
 /* ---------- hero ---------- */
-.lp-hero { align-items: center; display: grid; gap: 52px; grid-template-columns: 1.02fr .98fr; padding: 70px 0 80px; }
+.lp-hero { align-items: start; display: grid; gap: 52px; grid-template-columns: 1.02fr .98fr; padding: 20px 0 64px; }
 .lp-eyebrow {
   align-items: center;
   background: rgba(34, 211, 238, .12);
@@ -143,7 +143,7 @@
 .lp-hero h1 {
   font-size: clamp(2.6rem, 6vw, 4.6rem);
   letter-spacing: -.045em;
-  margin: 22px 0 18px;
+  margin: 0 0 10px;
   text-shadow: 0 0 34px rgba(34, 211, 238, .45);
   text-transform: uppercase;
 }
@@ -367,4 +367,51 @@
   .lp-cta-actions { width: 100%; }
   .lp-chip { display: none; }
   .lp-hero-actions .lp-btn { width: 100%; }
+}
+.lp-hero-location {
+  background: rgba(34, 211, 238, .12);
+  border: 1px solid rgba(34, 211, 238, .4);
+  border-radius: 999px;
+  color: #9beaf7;
+  display: inline-flex;
+  font-size: .54rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  margin-left: 10px;
+  padding: 4px 8px;
+  text-shadow: none;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* The headline sits close to navigation; the actual robots lead on mobile. */
+.lp .lp-hero-copy h1 { margin-top:0; }
+.lp-btn svg { width:23px; height:23px; flex-shrink:0; }
+.lp-main-cta { min-height:52px; }
+.lp-hero-copy { animation:lp-enter .6s ease-out both; }
+.lp-frame { animation:lp-enter .8s ease-out both; }
+.lp-card, .lp-tile, .lp-extra { transition:transform .25s ease, box-shadow .25s ease; }
+@media (hover:hover) {
+  .lp-card:hover, .lp-tile:hover { transform:translateY(-5px); box-shadow:0 16px 40px #0005; }
+  .lp-extra:hover { transform:translateX(4px); }
+}
+@keyframes lp-enter { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+@media (max-width:980px) {
+  .lp .lp-hero { padding-top:18px; }
+}
+@media (max-width:640px) {
+  .lp .lp-hero { display:flex; flex-direction:column; align-items:stretch; gap:12px; padding:16px 18px 32px; }
+  .lp-hero-copy { display:contents; }
+  .lp .lp-hero-copy h1 { order:0; margin:0; font-size:clamp(1.6rem,6.7vw,2.3rem); line-height:1.03; }
+  .lp .lp-hero-location { font-size:.43rem; margin-left:6px; padding:3px 6px; }
+  .lp .lp-frame { order:2; width:100%; max-width:380px; margin:0 auto; padding:6px; }
+  .lp .lp-stage { height:clamp(245px,43svh,360px); aspect-ratio:auto; }
+  .lp .lp-stage > img { object-fit:contain; }
+  .lp-hero-copy > .lp-hero-actions { order:3; margin:0; }
+  .lp-hero-actions .lp-btn-ghost { display:none; }
+  .lp-hero-copy > p { order:4; margin:0; font-size:.93rem; line-height:1.5; }
+  .lp-hero-copy > .lp-hero-note { order:5; font-size:.72rem; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .lp *, .lp *::before, .lp *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; }
 }

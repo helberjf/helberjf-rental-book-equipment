@@ -11,6 +11,7 @@ export default function Team() {
   const [employees, setEmployees] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [person, setPerson] = useState({ name: '', contact: '' });
+  const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ employeeId: '', title: '', date: toLocalDateKey(new Date()), startTime: '18:00', endTime: '22:00', notes: '' });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -28,7 +29,8 @@ export default function Team() {
     event.preventDefault(); setBusy(true); setError(''); setMessage('');
     try {
       if (kind === 'person') {
-        await api.post('/api/employees', person); setPerson({ name: '', contact: '' }); setMessage('Employee added.');
+        if (editing) await api.patch(`/api/employees/${editing}`, person); else await api.post('/api/employees', person);
+        setPerson({ name: '', contact: '' }); setEditing(null); setMessage('Employee saved.');
       } else {
         const range = buildEventRange(form.date, form.startTime, form.endTime);
         await api.post('/api/staff-bookings', { employeeId: Number(form.employeeId), title: form.title, notes: form.notes, ...range });
@@ -43,6 +45,16 @@ export default function Team() {
     try { await api.delete(`/api/staff-bookings/${id}`); setMessage('Reservation cancelled.'); await load(); }
     catch (e) { setError(getApiError(e)); } finally { setBusy(false); }
   };
+  const removePerson = async employee => {
+    if (!window.confirm(`${t('Delete employee')}: ${employee.name}? ${t('History is preserved. Upcoming bookings prevent deletion.')}`)) return;
+    setBusy(true); setError(''); setMessage('');
+    try {
+      await api.delete(`/api/employees/${employee.id}`);
+      if (editing === employee.id) { setEditing(null); setPerson({name:'',contact:''}); }
+      if (Number(form.employeeId) === employee.id) update('employeeId','');
+      setMessage('Employee deleted.'); await load();
+    } catch(e) { setError(getApiError(e)); } finally { setBusy(false); }
+  };
   const schedule = [
     ...bookings.map(b => ({ ...b, name: b.employee.name, manual: true })),
     ...rentals.filter(r => !['DRAFT', 'CANCELLED'].includes(r.status)).flatMap(r => r.employees.map(e => ({ id: `${r.id}-${e.id}`, name: e.name, title: r.customer.name, startAt: r.startAt, endAt: r.endAt }))),
@@ -52,10 +64,10 @@ export default function Team() {
     {message && <div role="status" className="notice notice-success">{t(message)}</div>}
     <div className="catalog-forms">
       <form className="panel rental-form" onSubmit={e => save(e, 'person')}>
-        <h2>{t('New employee')}</h2>
+        <div className="panel-header"><h2>{t(editing ? 'Edit employee' : 'New employee')}</h2>{editing && <button type="button" disabled={busy} className="button button-ghost" onClick={() => { setEditing(null); setPerson({name:'',contact:''}); }}>{t('Cancel')}</button>}</div>
         <label>{t('Name')}<input required minLength={2} maxLength={120} value={person.name} onChange={e => setPerson({ ...person, name: e.target.value })} /></label>
         <label>{t('Contact')}<input type="tel" maxLength={80} value={person.contact} onChange={e => setPerson({ ...person, contact: e.target.value })} /></label>
-        <button className="button button-primary" disabled={busy}>{t('Add employee')}</button>
+        <button className="button button-primary" disabled={busy}>{t(editing ? 'Save changes' : 'Add employee')}</button>
       </form>
       <form className="panel rental-form" onSubmit={e => save(e, 'booking')}>
         <h2>{t('Reserve employee')}</h2>
@@ -70,7 +82,10 @@ export default function Team() {
       </form>
     </div>
     <section className="panel"><div className="panel-header"><h2>{t('Team')}</h2><span className="record-count">{employees.length}</span></div>
-      <div className="catalog-grid">{employees.map(e => <article className="catalog-card" key={e.id}><span className="person-avatar" aria-hidden="true">{e.name.slice(0,2).toUpperCase()}</span><h3>{e.name}</h3><p>{e.contact || '—'}</p></article>)}</div>
+      <div className="catalog-grid">{employees.map(e => <article className="catalog-card" key={e.id}><span className="person-avatar" aria-hidden="true">{e.name.slice(0,2).toUpperCase()}</span><h3>{e.name}</h3><p>{e.contact || '—'}</p><div className="catalog-actions">
+        <button className="button button-secondary" disabled={busy} aria-label={`${t('Edit employee')}: ${e.name}`} onClick={() => { setEditing(e.id); setPerson({name:e.name,contact:e.contact || ''}); window.scrollTo({top:0,behavior:'smooth'}); }}>{t('Edit')}</button>
+        <button className="button button-danger" disabled={busy} aria-label={`${t('Delete employee')}: ${e.name}`} onClick={() => removePerson(e)}>{t('Delete')}</button>
+      </div></article>)}</div>
       {!employees.length && <EmptyBlock title="No employees yet" text="Add your first team member." />}
     </section>
     <section className="panel"><h2>{t('Staff reservations')}</h2>

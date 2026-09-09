@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FaWhatsapp } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./landing.css";
@@ -157,6 +158,8 @@ function HeroStage() {
         <img
           src={`${PHOTO_DIR}/${HERO_PHOTO.file}`}
           alt={HERO_PHOTO.alt}
+          loading="eager"
+          fetchPriority="high"
           onError={() => setFailed(true)}
         />
       )}
@@ -180,7 +183,7 @@ export default function Landing() {
             <span className="lp-brand-mark" aria-hidden="true">🤖</span>
             <span>
               <strong>Robô de LED JF</strong>
-              <span>Robôs de LED para eventos</span>
+              <span>Experiências para eventos</span>
             </span>
           </a>
           <nav className="lp-nav-links">
@@ -199,16 +202,15 @@ export default function Landing() {
       <main id="topo">
         <section className="lp-wrap lp-hero">
           <div className="lp-hero-copy">
-            <span className="lp-eyebrow">Juiz de Fora e região</span>
-            <h1>Robôs de <em>LED</em> para o seu evento</h1>
+            <h1>Robôs de <em>LED</em> para o seu evento{' '}<span className="lp-hero-location">Juiz de Fora e região</span></h1>
             <p>
-              Somos um time de robôs com luzes de LED em cores variadas, que interagem com os
-              convidados e mantêm o clima da festa sempre lá no alto. Uma atração que envolve,
-              surpreende e transforma qualquer evento.
+              Alugue robôs de LED para casamentos, aniversários, festas de 15 anos,
+              formaturas e eventos empresariais. Luzes, interação e uma experiência
+              inesquecível para seus convidados.
             </p>
             <div className="lp-hero-actions">
-              <a className="lp-btn lp-btn-yellow" href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
-                Contrate para seu evento
+              <a className="lp-btn lp-btn-whats lp-main-cta" href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
+                <FaWhatsapp aria-hidden="true" focusable="false" /> Contrate para seu evento
               </a>
               <a className="lp-btn lp-btn-ghost" href="#galeria">Ver a galeria</a>
             </div>
@@ -277,7 +279,7 @@ export default function Landing() {
               </p>
               <div className="lp-hero-actions">
                 <a className="lp-btn lp-btn-whats" href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
-                  Pedir orçamento no WhatsApp
+                  <FaWhatsapp aria-hidden="true" focusable="false" /> Pedir orçamento no WhatsApp
                 </a>
               </div>
             </div>
@@ -354,7 +356,7 @@ export default function Landing() {
             </div>
             <div className="lp-cta-actions">
               <a className="lp-btn lp-btn-whats" href={WHATSAPP_LINK} target="_blank" rel="noreferrer">
-                WhatsApp {WHATSAPP_DISPLAY}
+                <FaWhatsapp aria-hidden="true" focusable="false" /> WhatsApp {WHATSAPP_DISPLAY}
               </a>
               <a className="lp-btn lp-btn-pink" href={INSTAGRAM_LINK} target="_blank" rel="noreferrer">
                 Seguir @robodeledjf

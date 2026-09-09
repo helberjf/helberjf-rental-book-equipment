@@ -10,9 +10,10 @@ The initial inventory contains eight LED robots and one LED swing. The data mode
 - responsible person, contact, email and venue;
 - individually selected equipment units;
 - overlap protection using `[start, end)` time intervals;
-- one or more assigned employees;
-- staff registration and independent time reservations, with conflict protection;
-- equipment registration and editing: weight, height, width, length, color and per-unit rental price;
+- one or more assigned employees, with an internal fee recorded for each event;
+- final operational notes for each event;
+- staff creation, editing, safe deletion and independent time reservations, with conflict protection;
+- equipment creation, editing and safe deletion: weight, height, width, length, color and per-unit rental price;
 - automatically suggested booking price, with manual override for negotiated packages;
 - service-only appointments without equipment;
 - charged, received and automatically calculated remaining amounts;
@@ -21,7 +22,7 @@ The initial inventory contains eight LED robots and one LED swing. The data mode
 - monthly report with printable layout;
 - Portuguese/English administration with a persistent language selector;
 - mobile layouts, day agenda and touch-friendly controls;
-- Robô de LED JF landing page featuring supplied event photos and an AI-edited hero;
+- animated, responsive Robô de LED JF landing page featuring supplied event photos, an AI-edited hero, WhatsApp CTA and social-link preview metadata;
 - JWT-protected administration;
 - PostgreSQL schema, migration and idempotent seed.
 
@@ -102,9 +103,9 @@ Admin application:
 ## Operating guide
 
 1. In **Equipment**, register physical units using unique identifiers. Enter measurements in kg/cm and the default price in BRL. Edit existing equipment to set its actual rate; initial inventory has no assumed commercial prices.
-2. In **Team**, add employees and reserve standalone time slots. Event assignments and manual bookings share the same availability checks.
+2. In **Team**, add or edit employees and reserve standalone time slots. Event assignments and manual bookings share the same availability checks. Deletion is blocked while the employee has an ongoing or future commitment, while historical records are preserved.
 3. Select a date in **Calendar**, then create a booking. Enter the responsible person, contact, start/end, staff, equipment and payment. Overlapping reservations are rejected; consecutive non-overlapping events are allowed.
-4. **Reports** filters by month, totals charged/received/outstanding amounts, counts future events and prints using the browser's print dialog (including Save as PDF).
+4. **Reports** filters by month, totals charged/received/outstanding amounts and staff costs, counts future events and prints using the browser's print dialog (including Save as PDF).
 5. Use **System language** in the dashboard header. User-entered names and descriptions remain as entered. The public marketing page is in Portuguese.
 
 The additive staff/equipment migration is applied by the API deployment build. Existing bookings and payments are preserved. Production builds do not rerun the initial seed, so custom equipment names, staff, unit status and administrator credentials are not reset on redeployment. Run the seed explicitly only when provisioning a new database.
