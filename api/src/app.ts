@@ -5,6 +5,7 @@ import { ZodError } from "zod";
 import { createRequireAuth } from "./middlewares/auth";
 import { authRouter, jwtSecret } from "./routes/auth.routes";
 import { rentalRouter } from "./routes/rental.routes";
+import { catalogRouter } from "./routes/catalog.routes";
 
 export const app = express();
 
@@ -22,6 +23,7 @@ app.get("/ping", (_request, response) => {
 });
 app.use("/api/auth", authRouter);
 app.use("/api", createRequireAuth(jwtSecret), rentalRouter);
+app.use("/api", createRequireAuth(jwtSecret), catalogRouter);
 
 app.use((_request, response) => {
   response.status(404).json({ success: false, message: "Route not found" });

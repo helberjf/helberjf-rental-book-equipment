@@ -1,4 +1,8 @@
-# Fotos da landing page
+# Landing page images
+
+The current landing uses `hero-clean.png` as its AI-edited hero and photographic windows from `robot-experiences.png`, `event-types.png` and `event-effects.png` in the gallery. `team-poster.png` preserves the supplied reference. See `docs/media-assets.md` at the repository root for provenance. The filename suggestions below are retained as historical guidance only.
+
+## Historical photo suggestions
 
 Salve aqui as fotos do Instagram [@robodeledjf](https://www.instagram.com/robodeledjf/)
 com exatamente estes nomes. A página inicial procura por eles:

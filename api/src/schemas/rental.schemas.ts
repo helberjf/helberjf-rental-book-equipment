@@ -28,7 +28,7 @@ export const createRentalSchema = z.object({
   notes: z.string().trim().max(2000).optional(),
   finalAmountCents: moneyInCents,
   employeeIds: z.array(positiveId).min(1),
-  items: z.array(rentalItemSchema).min(1),
+  items: z.array(rentalItemSchema).default([]),
   initialPayment: paymentSchema.optional(),
   confirm: z.boolean().default(true),
 }).refine((value) => value.endAt > value.startAt, {

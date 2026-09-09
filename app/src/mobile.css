@@ -1,0 +1,104 @@
+/* Small screens are the baseline; enhance density when space is available. */
+.app-body, .page-content, .panel, .page-stack, .calendar-layout, .rental-form { min-width: 0; }
+.app-shell { overflow-wrap: anywhere; }
+.app-shell input, .app-shell select, .app-shell textarea, .login-page input { font-size: 16px; min-height: 44px; }
+.app-shell input[type=checkbox] { min-height: 18px; width:18px; height:18px; flex-shrink:0; }
+.button, .icon-button, .menu-button, .sidebar-user button { min-height:44px; }
+.icon-button, .menu-button, .sidebar-user button { min-width:44px; }
+button:disabled { opacity:.55; cursor:not-allowed; }
+:focus-visible { outline:3px solid #9a7df7; outline-offset:3px; }
+.topbar > div:first-of-type { min-width:0; }
+.topbar h1 { font-size:clamp(1rem,2.2vw,1.35rem); }
+.language-select { margin-left:auto; gap:3px; min-width:106px; font-size:.65rem; flex-shrink:0; }
+.language-select select { font-size:.82rem; padding:7px 9px; }
+.topbar-date { margin-left:6px; }
+.footer { gap:12px; flex-wrap:wrap; line-height:1.6; }
+.footer a { color:var(--primary); }
+.sidebar { height:100dvh; overflow-y:auto; }
+.sidebar-nav { padding-bottom:20px; }
+.modal-card { max-height:90dvh; overflow-y:auto; }
+.catalog-forms, .catalog-grid, .measurement-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:18px; }
+.catalog-card { padding:20px; border:1px solid var(--line); border-radius:14px; background:#fcfbff; min-width:0; }
+.catalog-card h3 { margin:10px 0; font-size:1.1rem; }
+.catalog-card p, .catalog-card small { color:var(--muted); line-height:1.6; }
+.catalog-card small { display:block; }
+.catalog-price { font-size:1.5rem; color:var(--primary); }
+.edit-equipment-list { display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
+.spec-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.spec-list dt { font-size:.75rem; color:var(--muted); }
+.spec-list dd { margin:4px 0 0; font-weight:700; }
+.unit-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:16px; }
+.unit-tags span { padding:7px 9px; border-radius:6px; background:#eee9fe; color:#5337af; font-size:.75rem; }
+.person-avatar { display:grid; place-items:center; width:46px; height:46px; border-radius:14px; background:#eee8ff; color:var(--primary); font-weight:800; }
+.agenda-list, .day-agenda { display:grid; gap:12px; }
+.agenda-card { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:16px; border:1px solid var(--line); border-radius:12px; background:#faf9fd; text-align:left; width:100%; color:var(--ink); }
+.agenda-card p { margin:6px 0; }
+.agenda-card small { color:var(--muted); }
+.calendar-panel { overflow:visible; }
+.calendar-controls { flex-wrap:wrap; }
+.calendar-weekdays, .calendar-grid { min-width:0; grid-template-columns:repeat(7,minmax(0,1fr)); }
+.calendar-weekdays span { font-size:.63rem; padding:8px 0; text-align:center; }
+.calendar-day { padding:2px; min-height:76px; }
+.day-number { width:100%; min-height:36px; border:0; background:transparent; color:inherit; border-radius:7px; }
+.day-number[aria-pressed=true] { background:#e6ddff; box-shadow:inset 0 0 0 2px #7350ee; }
+.day-number.today { border-radius:7px; }
+.calendar-event { display:block; width:100%; padding:3px 1px; border-left-width:2px; min-height:24px; font-size:.53rem; }
+.calendar-event strong { font-size:.53rem; }
+.calendar-event span { display:none; }
+.more-events { font-size:.55rem; padding:0; }
+.day-agenda { margin-top:24px; }
+.day-agenda .panel-header { margin-bottom:0; }
+.day-agenda h3 { font-size:1rem; }
+.calendar-detail { position:static; }
+.stat-card { padding:16px; }
+.stat-card span, .stat-card small, .field-help, .form-summary p { font-size:.8rem; }
+.unit-option { min-height:58px; }
+.unit-option span { font-size:.8rem; }
+.unit-option small { font-size:.68rem; }
+.check-pill { min-height:44px; font-size:.8rem; }
+.check-pill:has(input:disabled) { opacity:.6; }
+@media screen and (max-width: 640px) {
+  .topbar { gap:7px; padding:10px 12px; }
+  .page-content { padding:16px 10px 28px; }
+  .stats-grid, .report-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .stat-card strong { font-size:clamp(1rem,4.7vw,1.6rem); }
+  .table-wrap { overflow:visible; margin:0; }
+  .app-shell table, .app-shell tbody, .app-shell tr, .app-shell td { display:block; width:100%; }
+  .app-shell .table-wrap table { min-width:0; }
+  .app-shell thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  .app-shell tbody { display:grid; gap:14px; }
+  .app-shell tr { border:1px solid var(--line); border-radius:12px; padding:10px; }
+  .app-shell td { display:grid; grid-template-columns:minmax(85px,.8fr) minmax(0,1.2fr); gap:4px 10px; padding:10px 3px; font-size:.82rem; }
+  .app-shell td::before { content:attr(data-label); grid-column:1; grid-row:1 / span 3; color:var(--muted); font-size:.72rem; font-weight:700; }
+  .app-shell td > * { grid-column:2; }
+  .app-shell td small { white-space:normal; }
+  .app-shell td.row-actions { display:flex; flex-wrap:wrap; }
+  .app-shell td.row-actions::before { display:none; }
+  .calendar-toolbar { gap:15px; }
+  .calendar-controls { gap:5px; }
+  .calendar-controls .button { padding-inline:10px; }
+  .login-form-wrap { padding:24px 20px; min-height:100dvh; }
+}
+@media (min-width:640px) {
+  .measurement-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .catalog-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .calendar-day { min-height:110px; padding:6px; }
+  .calendar-event { display:flex; font-size:.65rem; padding:6px 4px; }
+  .calendar-event span { display:inline; }
+  .calendar-event strong { font-size:.6rem; }
+  .day-number { width:36px; }
+}
+@media (min-width:1100px) {
+  .catalog-forms { grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr); align-items:start; }
+  .measurement-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .catalog-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+@media print {
+  @page { size:A4 landscape; margin:10mm; }
+  .language-select { display:none; }
+  .report-stats { grid-template-columns:repeat(5,minmax(0,1fr)); }
+  .report-table tr { break-inside:avoid; }
+  .report-table thead { display:table-header-group; }
+  .report-table td, .report-table th { overflow-wrap:anywhere; white-space:normal; }
+}
+@media (prefers-reduced-motion:reduce) { *, *::before, *::after { scroll-behavior:auto!important; transition:none!important; animation:none!important; } }

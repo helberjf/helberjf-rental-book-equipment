@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Prisma, type PrismaClient } from "@prisma/client";
+import { assertStaffAvailable } from "../services/staff-availability";
+import { buildReservations } from "../services/rental.service";
 import type {
   AddPaymentInput,
   CreateRentalInput,
@@ -211,7 +213,23 @@ export class PrismaRentalRepository implements RentalRepository {
   }
 
   async confirm(id: number, reservations: ReservationDraft[]): Promise<RentalRecord> {
-    return this.client.$transaction(async (transaction) => {
+    return this.client.$transaction(tx => this.confirmInTransaction(tx, id, reservations), { timeout: 20000 });
+  }
+
+  async createConfirmed(input: CreateRentalInput): Promise<RentalRecord> {
+    return this.client.$transaction(async tx => {
+      const repository = new PrismaRentalRepository(tx as PrismaClient);
+      const draft = await repository.createDraft(input);
+      return this.confirmInTransaction(tx, draft.id, buildReservations(draft));
+    }, { timeout: 20000 });
+  }
+
+  private async confirmInTransaction(transaction: Prisma.TransactionClient, id: number, reservations: ReservationDraft[]): Promise<RentalRecord> {
+      await transaction.$executeRaw`SELECT pg_advisory_xact_lock(3, ${id}::integer)`;
+      const current = await transaction.rental.findUniqueOrThrow({ where: { id }, include: rentalInclude });
+      if (current.status === "CONFIRMED" || current.status === "IN_PROGRESS") return toRecord(current);
+      if (current.status !== "DRAFT") throw new Error("Only draft rentals can be confirmed");
+      await assertStaffAvailable(transaction, current.employees.map(e => e.employeeId), current.startAt, current.endAt, id);
       const individualReservations = reservations
         .filter(
           (reservation): reservation is ReservationDraft & { productUnitId: number } =>
@@ -221,7 +239,7 @@ export class PrismaRentalRepository implements RentalRepository {
 
       // A transaction-scoped lock per physical unit serializes concurrent confirmations.
       for (const reservation of individualReservations) {
-        await transaction.$queryRaw`SELECT pg_advisory_xact_lock(${reservation.productUnitId})`;
+        await transaction.$executeRaw`SELECT pg_advisory_xact_lock(${reservation.productUnitId})`;
       }
 
       if (individualReservations.length > 0) {
@@ -254,7 +272,6 @@ export class PrismaRentalRepository implements RentalRepository {
         include: rentalInclude,
       });
       return toRecord(rental);
-    });
   }
 
   async addPayment(id: number, payment: AddPaymentInput): Promise<RentalRecord> {

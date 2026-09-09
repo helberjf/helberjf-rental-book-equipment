@@ -11,16 +11,16 @@ const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponen
 const INSTAGRAM_LINK = "https://www.instagram.com/robodeledjf/";
 const PHOTO_DIR = "/images/robodeledjf";
 
-const HERO_PHOTO = { file: "capa-robos-de-led.jpg", alt: "Time de robôs de LED do Robô de LED JF" };
+const HERO_PHOTO = { file: "hero-clean.png", alt: "Composição dos robôs de LED da Robô de LED JF" };
 
-// Drop the real photos in app/public/images/robodeledjf/ using these file names.
+// Photographic windows from the owner's supplied event screenshots.
 const GALLERY = [
-  { file: "bumblebee.jpg", caption: "Bumblebee", icon: "🤖" },
-  { file: "robo-verde.jpg", caption: "Robô com painel de LED", icon: "💚" },
-  { file: "robo-tequileiro.jpg", caption: "Robô tequileiro", icon: "🍹" },
-  { file: "festa-noite.jpg", caption: "Festa a céu aberto", icon: "🎉" },
-  { file: "criancas.jpg", caption: "Aniversários e festas infantis", icon: "🎈" },
-  { file: "evento-empresarial.jpg", caption: "Evento empresarial", icon: "🏢" },
+  { file: "robot-experiences.png", caption: "Bumblebee", crop: 'bumblebee' },
+  { file: "robot-experiences.png", caption: "Painel de LED personalizado", crop: 'green' },
+  { file: "robot-experiences.png", caption: "Luzes que transformam a festa", crop: 'night' },
+  { file: "event-types.png", caption: "Diversão para todas as idades", crop: 'kids' },
+  { file: "event-types.png", caption: "Momentos inesquecíveis", crop: 'party' },
+  { file: "event-effects.png", caption: "Eventos empresariais", crop: 'corporate' },
 ];
 
 const ROBOTS = [
@@ -73,7 +73,7 @@ function Photo({ file, alt, icon, className }) {
     return (
       <div className={`lp-photo-empty ${className || ""}`.trim()}>
         <span aria-hidden="true">{icon}</span>
-        <small>Adicione a foto<br />{file}</small>
+        <small>Robô de LED JF</small>
       </div>
     );
   }
@@ -317,8 +317,8 @@ export default function Landing() {
           </div>
           <div className="lp-gallery">
             {GALLERY.map((item) => (
-              <figure className="lp-tile" key={item.file}>
-                <Photo file={item.file} alt={item.caption} icon={item.icon} />
+              <figure className="lp-tile" key={item.crop}>
+                <div className={`lp-photo-crop crop-${item.crop}`}><Photo file={item.file} alt={item.caption} /></div>
                 <figcaption>{item.caption}</figcaption>
               </figure>
             ))}
@@ -383,6 +383,7 @@ export default function Landing() {
             </div>
           </div>
           <small>© {new Date().getFullYear()} Robô de LED JF · Juiz de Fora / MG</small>
+          <small className="lp-developer">Desenvolvido por <a href="https://www.linkedin.com/in/helber-soares/" target="_blank" rel="noopener noreferrer">Helber Soares ↗</a></small>
         </div>
       </footer>
     </div>

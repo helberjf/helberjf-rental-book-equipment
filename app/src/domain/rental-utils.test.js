@@ -37,3 +37,8 @@ test("buildRentalItems groups selected equipment units by product", () => {
     { productId: 2, quantity: 1, productUnitIds: [21], unitPriceCents: 0 },
   ]);
 });
+
+test('rental line items preserve each product default price', () => {
+  const items = buildRentalItems([{id:1,defaultRateCents:25000,units:[{id:1},{id:2}]},{id:2,defaultRateCents:40000,units:[{id:3}]}],[1,2,3]);
+  assert.equal(items.reduce((sum,item) => sum+item.quantity*item.unitPriceCents,0),90000);
+});

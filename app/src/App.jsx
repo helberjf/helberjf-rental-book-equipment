@@ -8,7 +8,10 @@ import Landing from "./pages/Landing";
 import Rentals from "./pages/Rentals";
 import Reports from "./pages/Reports";
 import Signin from "./pages/Signin";
+import Team from "./pages/Team";
+import Equipment from "./pages/Equipment";
 import "./App.css";
+import "./mobile.css";
 
 const router = createBrowserRouter([
   { path: "/", element: <Landing /> },
@@ -21,6 +24,8 @@ const router = createBrowserRouter([
       { path: "calendar", element: <Calendar /> },
       { path: "rentals", element: <Rentals /> },
       { path: "reports", element: <Reports /> },
+      { path: "team", element: <Team /> },
+      { path: "equipment", element: <Equipment /> },
     ],
   },
   { path: "/dashboard", element: <Navigate to="/admin" replace /> },

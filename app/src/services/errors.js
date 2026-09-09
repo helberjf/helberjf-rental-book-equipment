@@ -1,2 +1,2 @@
-export const getApiError = (error) =>
-  error?.response?.data?.message || error?.message || "Unexpected request error";
+import { t } from '../domain/language';
+export const getApiError = (error) => t(error?.response?.data?.message || 'Request failed');

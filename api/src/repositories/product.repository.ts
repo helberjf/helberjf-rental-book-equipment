@@ -32,6 +32,12 @@ export class ProductRepository {
     return products.map((product) => ({
       id: product.id,
       name: product.name,
+      description: product.description,
+      weightKg: product.weightKg,
+      heightCm: product.heightCm,
+      widthCm: product.widthCm,
+      lengthCm: product.lengthCm,
+      color: product.color,
       category: product.category.name,
       quantity: product.quantity,
       trackIndividualUnits: product.trackIndividualUnits,

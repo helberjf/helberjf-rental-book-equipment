@@ -54,8 +54,7 @@ export const createRentalController = (
   createRental: handle(async (request, response) => {
     const parsed = createRentalSchema.parse(request.body);
     const { confirm, ...input } = parsed;
-    const draft = await rentalService.createDraftRental(input);
-    const result = confirm ? await rentalService.confirmRental(draft.id) : draft;
+    const result = await rentalService.createRental(input, confirm);
     ok(response, result, 201);
   }),
 
@@ -103,7 +102,8 @@ export const createRentalController = (
     ok(response, await productRepository.listActive(startAt, endAt));
   }),
 
-  employees: handle(async (_request, response) => {
-    ok(response, await employeeRepository.listActive());
+  employees: handle(async (request, response) => {
+    const range = rentalListQuerySchema.parse(request.query);
+    ok(response, await employeeRepository.listActive(range.startAt, range.endAt));
   }),
 });

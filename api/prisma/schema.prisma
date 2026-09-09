@@ -93,6 +93,11 @@ model Product {
   bufferBeforeMinutes   Int                    @default(0)
   bufferAfterMinutes    Int                    @default(0)
   defaultRateCents      Int                    @default(0)
+  weightKg              Float?
+  heightCm              Float?
+  widthCm               Float?
+  lengthCm              Float?
+  color                 String?
   active                Boolean                @default(true)
   category              Category               @relation(fields: [categoryId], references: [id])
   units                 ProductUnit[]
@@ -144,11 +149,25 @@ model Employee {
   contact     String?
   active      Boolean          @default(true)
   assignments RentalEmployee[]
+  bookings    EmployeeBooking[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
   @@index([name])
   @@index([active])
+}
+
+model EmployeeBooking {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  title      String
+  startAt    DateTime
+  endAt      DateTime
+  notes      String?
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  createdAt  DateTime @default(now())
+
+  @@index([employeeId, startAt, endAt])
 }
 
 model Rental {

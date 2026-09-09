@@ -74,7 +74,6 @@ describe("RentalService", () => {
     ["responsible name", { responsibleName: "" }],
     ["responsible contact", { responsibleContact: "" }],
     ["final amount", { finalAmountCents: -1 }],
-    ["at least one product", { items: [] }],
     ["at least one employee", { employeeIds: [] }],
   ])("requires %s when creating a rental", async (_field, change) => {
     const service = new RentalService(repository());
@@ -100,6 +99,14 @@ describe("RentalService", () => {
         blockedUntil: new Date("2026-09-21T01:00:00.000Z"),
       }),
     ]);
+  });
+
+  it("supports a staff-only service without equipment reservations", async () => {
+    const repo = repository(baseRental({ items: [] }));
+    const service = new RentalService(repo);
+    await expect(service.createDraftRental({ ...baseInput(), items: [] })).resolves.toMatchObject({ items: [] });
+    await service.confirmRental(10);
+    expect(repo.confirmedReservations).toEqual([]);
   });
 
   it("updates received and remaining values after a confirmed payment", async () => {

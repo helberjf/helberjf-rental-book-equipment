@@ -1,3 +1,5 @@
+import { getLocale } from './language.js';
+
 export const buildEventDateTime = (date, time) => {
   const value = new Date(`${date}T${time}:00-03:00`);
   if (!Number.isFinite(value.getTime())) {
@@ -44,20 +46,20 @@ export const buildRentalItems = (products, selectedUnitIds) => {
           productId: product.id,
           quantity: productUnitIds.length,
           productUnitIds,
-          unitPriceCents: 0,
+          unitPriceCents: product.defaultRateCents ?? 0,
         }]
       : [];
   });
 };
 
 export const formatCurrency = (amountCents = 0) =>
-  new Intl.NumberFormat("en-US", {
+  new Intl.NumberFormat(getLocale(), {
     style: "currency",
     currency: "BRL",
   }).format(amountCents / 100);
 
 export const formatEventDate = (value, options = {}) =>
-  new Intl.DateTimeFormat("en-GB", {
+  new Intl.DateTimeFormat(getLocale(), {
     timeZone: "America/Sao_Paulo",
     ...options,
   }).format(new Date(value));

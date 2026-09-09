@@ -87,6 +87,7 @@ export interface RentalListFilters {
 }
 
 export interface RentalRepository {
+  createConfirmed?(input: CreateRentalInput): Promise<RentalRecord>;
   createDraft(input: CreateRentalInput): Promise<RentalRecord>;
   getById(id: number): Promise<RentalRecord | null>;
   list(filters?: RentalListFilters): Promise<RentalRecord[]>;
@@ -120,7 +121,6 @@ const assertCreateInput = (input: CreateRentalInput) => {
   if (!Number.isInteger(input.finalAmountCents) || input.finalAmountCents < 0) {
     throw new Error("Final amount must be a non-negative integer");
   }
-  if (input.items.length === 0) throw new Error("At least one product is required");
   if (input.employeeIds.length === 0) throw new Error("At least one employee is required");
 
   for (const item of input.items) {
@@ -144,7 +144,7 @@ const withFinancials = (rental: RentalRecord): RentalView => ({
   }),
 });
 
-const buildReservations = (rental: RentalRecord): ReservationDraft[] =>
+export const buildReservations = (rental: RentalRecord): ReservationDraft[] =>
   rental.items.flatMap<ReservationDraft>((item): ReservationDraft[] => {
     const blockedFrom = addMinutes(rental.startAt, -item.bufferBeforeMinutes);
     const blockedUntil = addMinutes(rental.endAt, item.bufferAfterMinutes);
@@ -172,6 +172,13 @@ const buildReservations = (rental: RentalRecord): ReservationDraft[] =>
 
 export class RentalService {
   constructor(private readonly repository: RentalRepository) {}
+
+  async createRental(input: CreateRentalInput, confirm: boolean): Promise<RentalView> {
+    assertCreateInput(input);
+    if (confirm && this.repository.createConfirmed) return withFinancials(await this.repository.createConfirmed(input));
+    const draft = await this.createDraftRental(input);
+    return confirm ? this.confirmRental(draft.id) : draft;
+  }
 
   async createDraftRental(input: CreateRentalInput): Promise<RentalView> {
     assertCreateInput(input);
