@@ -17,6 +17,50 @@ describe('Staff availability', () => {
     (source === 'manual' ? tx.employeeBooking : tx.rentalEmployee).findFirst.mockResolvedValue({id:1});
     await expect(assertStaffAvailable(tx as unknown as Prisma.TransactionClient,[1],start,end)).rejects.toThrow('already reserved');
   });
+  it('rejects assigning the same employee to a second overlapping event', async () => {
+    const firstEvent = {
+      id: 101,
+      employeeId: 1,
+      startAt: new Date('2026-10-01T18:00:00Z'),
+      endAt: new Date('2026-10-01T20:00:00Z'),
+      status: 'CONFIRMED',
+    };
+    const assignments: typeof firstEvent[] = [];
+    const tx = mock();
+
+    tx.rentalEmployee.findFirst.mockImplementation(async ({ where }) => {
+      const requestedEndAt = where.rental.startAt.lt as Date;
+      const requestedStartAt = where.rental.endAt.gt as Date;
+      const excludedRentalId = where.rental.id?.not as number | undefined;
+      const match = assignments.find((assignment) =>
+        where.employeeId.in.includes(assignment.employeeId) &&
+        assignment.id !== excludedRentalId &&
+        assignment.startAt < requestedEndAt &&
+        assignment.endAt > requestedStartAt,
+      );
+
+      return match ? { id: match.id } : null;
+    });
+
+    await expect(
+      assertStaffAvailable(
+        tx as unknown as Prisma.TransactionClient,
+        [firstEvent.employeeId],
+        firstEvent.startAt,
+        firstEvent.endAt,
+      ),
+    ).resolves.toBeUndefined();
+    assignments.push(firstEvent);
+
+    await expect(
+      assertStaffAvailable(
+        tx as unknown as Prisma.TransactionClient,
+        [firstEvent.employeeId],
+        new Date('2026-10-01T19:00:00Z'),
+        new Date('2026-10-01T21:00:00Z'),
+      ),
+    ).rejects.toThrow('Selected employee is already reserved for this time');
+  });
   it('rejects an inactive employee', async () => {
     const tx=mock(); tx.employee.count.mockResolvedValue(0);
     await expect(assertStaffAvailable(tx as unknown as Prisma.TransactionClient,[1],start,end)).rejects.toThrow('unavailable');
