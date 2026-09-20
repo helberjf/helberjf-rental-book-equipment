@@ -83,6 +83,14 @@ npm test
 npm run build
 ```
 
+## Documentation
+
+- [Product requirements document](docs/PRD.md) — product direction, users, requirements, business rules, success measures, and roadmap.
+- [Recruiter guide](docs/RECRUITER_GUIDE.md) — a concise script for presenting the project in interviews.
+- [Project structure](docs/PROJECT_STRUCTURE.md) — responsibilities and a recommended reading order.
+- [Migration plan](docs/RENTAL_SYSTEM_MIGRATION_PLAN.md) — domain decisions and acceptance criteria.
+- [Media provenance](docs/media-assets.md) — source and generated assets used by the public landing page.
+
 ## Production variables
 
 API:
@@ -117,3 +125,15 @@ The additive staff/equipment migration is applied by the API deployment build. E
 See [media provenance](docs/media-assets.md) for the supplied screenshots and generated hero asset.
 
 Developed by [Helber Soares](https://www.linkedin.com/in/helber-soares/).
+
+---
+
+# Resumo em português
+
+O Rental Book Equipment é um sistema full-stack para operação de locação de equipamentos e serviços para eventos. O produto permite cadastrar equipamentos físicos, controlar equipe, criar eventos, validar conflitos de horário, acompanhar pagamentos, visualizar o calendário e gerar relatórios mensais.
+
+O projeto já possui uma base operacional com calendário, equipe, equipamentos, pagamentos, dashboard, relatórios, autenticação, seed do banco, interface responsiva e administração em português/inglês. Também existe uma landing page pública para apresentar o serviço.
+
+O principal desafio de negócio é tratar disponibilidade por intervalo de tempo, e não apenas por data. Assim, o mesmo equipamento pode participar de dois eventos no mesmo dia quando os horários não se sobrepõem.
+
+O [PRD](docs/PRD.md) descreve a visão, os usuários, os requisitos, as regras de negócio, os critérios de aceite e os próximos incrementos do produto.
