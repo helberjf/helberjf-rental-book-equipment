@@ -69,7 +69,6 @@ It should not create confirmed bookings directly. Confirmation belongs to the ba
 - `RECRUITER_GUIDE.md` contains a ready-to-use explanation for interviews.
 - `PROJECT_STRUCTURE.md` is this folder and architecture map.
 - `notes/` contains historical setup and migration material that is no longer part of the active application surface.
-- `superpowers/` contains development plans and design specifications for this documentation improvement.
 
 ## Recommended five-minute reading order
 
