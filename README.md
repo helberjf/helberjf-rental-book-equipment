@@ -1,139 +1,90 @@
 # Rental Book Equipment
 
-Professional event-rental management for individual equipment units, schedules, staff assignments and payments.
+A full-stack operations system for renting individual event-equipment units, scheduling staff and tracking payments. The central domain problem is **availability over a time interval**, including overnight events, rather than simply marking a calendar day as unavailable.
 
-The initial inventory contains eight LED robots and one LED swing. The data model remains generic so more categories, products and physical units can be added later.
+## Review the main workflow
 
-## Features
+1. Register equipment types and uniquely identified physical units, plus staff members and their standalone reservations.
+2. Create an event with start/end times, selected units, staff fees, contact details and a negotiated price.
+3. Confirm availability, record received payments and inspect the remaining balance in the calendar or monthly report.
 
-- event date, start time and end time, including overnight events;
-- responsible person, contact, email and venue;
-- individually selected equipment units;
-- overlap protection using `[start, end)` time intervals;
-- one or more assigned employees, with an internal fee recorded for each event;
-- final operational notes for each event;
-- staff creation, editing, safe deletion and independent time reservations, with conflict protection;
-- equipment creation, editing and safe deletion: weight, height, width, length, color and per-unit rental price;
-- automatically suggested booking price, with manual override for negotiated packages;
-- service-only appointments without equipment;
-- charged, received and automatically calculated remaining amounts;
-- administrative calendar with event details;
-- operational dashboard and upcoming-event view;
-- monthly report with printable layout;
-- Portuguese/English administration with a persistent language selector;
-- mobile layouts, day agenda and touch-friendly controls;
-- animated, responsive Robô de LED JF landing page featuring supplied event photos, an AI-edited hero, WhatsApp CTA and social-link preview metadata;
-- JWT-protected administration;
-- PostgreSQL schema, migration and idempotent seed.
+Intervals are half-open: `[start, end)`. An event ending at 18:00 can be followed by one starting at 18:00, subject to configured setup/teardown buffers. Service-only appointments are supported. Monetary amounts in the API use integer cents.
 
-## Architecture
+## Architecture and code tour
 
 ```text
-React/Vite admin -> Express API -> Services -> Repositories -> Prisma -> PostgreSQL
+React/Vite administration → Express API → domain services → repositories → Prisma/PostgreSQL
 ```
 
-Main applications:
+| Location | Responsibility |
+| --- | --- |
+| [app](app) | Calendar, dashboard, equipment/staff management, reports and Portuguese/English administration. |
+| [api/src/services/rental.service.ts](api/src/services/rental.service.ts) | Booking validation, reservation intervals and financial views. |
+| [api/src/repositories/rental.repository.ts](api/src/repositories/rental.repository.ts) | Transactional confirmation, advisory locks and overlap queries. |
+| [api/src/domain](api/src/domain) | Availability and financial rules with focused tests. |
+| [store](store) | Inherited storefront, outside the current operational flow. |
 
-- `app/`: administrative web application;
-- `api/`: Express API, Prisma schema and database seed;
-- `store/`: inherited public storefront kept outside the current production flow.
+Confirmation locks the rental, relevant equipment products and physical units within a PostgreSQL transaction, then checks availability before creating active reservations. This is a concrete concurrency mechanism; any new booking writer must participate in the same locking protocol. It should not be described as a universal database constraint covering arbitrary direct writes.
 
-## Local setup
+## Run locally
 
-Requirements: Node.js 22+ and PostgreSQL.
+Requirements: Node.js 22+ and PostgreSQL. Copy `api/.env.example` to `api/.env` and `app/.env.example` to `app/.env` (`cp` on POSIX shells, `Copy-Item` in PowerShell). Configure the API's `DATABASE_URL`, `JWT_SECRET`, `ADMIN_INITIAL_PASSWORD` and `FRONTEND_URL`; configure `VITE_API_SERVER` for the web app.
 
 ```bash
 cd api
 npm install
-copy .env.example .env
 npx prisma migrate deploy
 npx prisma db seed
 npm run dev
 ```
 
-In another terminal:
+Run the migration and seed only against the intended development database. Set an explicit initial administrator password before seeding; the seed is provisioning work, not a routine application restart.
+
+In a second terminal:
 
 ```bash
 cd app
 npm install
-copy .env.example .env
 npm run dev
 ```
 
-Default local administrator:
+## Decisions and trade-offs
 
-```text
-Email: admin@rentalbook.local
-Password: ChangeMe123!
-```
+The interval model and legacy-store separation are documented in the [migration plan](docs/RENTAL_SYSTEM_MIGRATION_PLAN.md). The table also explains the implications of the current source.
 
-Always set `ADMIN_INITIAL_PASSWORD` before seeding a production database.
+| Choice | Benefit | Cost or boundary |
+| --- | --- | --- |
+| Physical units and half-open time intervals | Models real equipment availability and consecutive events precisely. | Overnight dates, buffers, staff commitments and time-zone handling need consistent rules. |
+| Transaction-scoped PostgreSQL advisory locks | Serializes competing confirmations for the same resources. | Correctness depends on every writer using the protocol; contention and lock order matter. |
+| Integer cents plus explicit payment status | Keeps charged/received/outstanding calculations auditable. | Currency formatting and provider settlement are separate concerns; a recorded payment is not a payment-gateway integration. |
+| Suggested pricing with manual override | Supports negotiated event packages. | The UI must make the agreed amount and staff costs clear rather than silently recalculating history. |
+| Separate API and administration app | Makes domain and UI responsibilities easy to inspect. | Requires two local processes and explicit API origin/authentication configuration. |
 
-## Quality checks
+## Verification and deployment
 
 ```bash
 cd api
 npm run typecheck
 npm test
 npm run build
-
 cd ../app
 npm run lint
 npm test
 npm run build
 ```
 
-## Documentation
+The API's `vercel-build` command applies `prisma migrate deploy` before compilation; its ordinary `build` only compiles TypeScript. Deployment does not automatically rerun the seed. Review migrations and database targets before deploying.
 
-- [Product requirements document](docs/PRD.md) — product direction, users, requirements, business rules, success measures, and roadmap.
-- [Recruiter guide](docs/RECRUITER_GUIDE.md) — a concise script for presenting the project in interviews.
-- [Project structure](docs/PROJECT_STRUCTURE.md) — responsibilities and a recommended reading order.
-- [Migration plan](docs/RENTAL_SYSTEM_MIGRATION_PLAN.md) — domain decisions and acceptance criteria.
-- [Media provenance](docs/media-assets.md) — source and generated assets used by the public landing page.
+The [workflow verifier](api/scripts/verify-workflows.cjs) exercises authenticated operations on port 3335 and creates staff, units, bookings and payments. Run it only against a separately seeded disposable schema, with `QA_PASSWORD` configured for that schema. Domain tests and this workflow check have different scopes; a new production concurrency or migration guarantee needs its own evidence.
 
-## Production variables
+## Operating notes and documentation
 
-API:
+Register units with unique identifiers and measurements in kg/cm; initial inventory does not imply commercial prices. Staff assignments and independent reservations share availability checks. Monthly reports summarize charged, received and outstanding amounts and can be printed. Administrative language selection does not translate user-entered data; the public marketing page is Portuguese.
 
-- `DATABASE_URL`: PostgreSQL connection string;
-- `JWT_SECRET`: random value with at least 32 characters;
-- `ADMIN_INITIAL_PASSWORD`: initial administrator password;
-- `FRONTEND_URL`: allowed admin application URL.
-
-Admin application:
-
-- `VITE_API_SERVER`: deployed API origin.
-
-## Repository
-
-[helberjf/helberjf-rental-book-equipment](https://github.com/helberjf/helberjf-rental-book-equipment)
-
-## Operating guide
-
-1. In **Equipment**, register physical units using unique identifiers. Enter measurements in kg/cm and the default price in BRL. Edit existing equipment to set its actual rate; initial inventory has no assumed commercial prices.
-2. In **Team**, add or edit employees and reserve standalone time slots. Event assignments and manual bookings share the same availability checks. Deletion is blocked while the employee has an ongoing or future commitment, while historical records are preserved.
-3. Select a date in **Calendar**, then create a booking. Enter the responsible person, contact, start/end, staff, equipment and payment. Overlapping reservations are rejected; consecutive non-overlapping events are allowed.
-4. **Reports** filters by month, totals charged/received/outstanding amounts and staff costs, counts future events and prints using the browser's print dialog (including Save as PDF).
-5. Use **System language** in the dashboard header. User-entered names and descriptions remain as entered. The public marketing page is in Portuguese.
-
-The additive staff/equipment migration is applied by the API deployment build. Existing bookings and payments are preserved. Production builds do not rerun the initial seed, so custom equipment names, staff, unit status and administrator credentials are not reset on redeployment. Run the seed explicitly only when provisioning a new database.
-
-### Isolated workflow verification
-
-`api/scripts/verify-workflows.cjs` exercises the authenticated API on port 3335. Run it **only** against a disposable test schema, seeded separately; set `QA_PASSWORD` to that schema's administrator password. It creates test staff, equipment, bookings and payments. Never point the local test API at production data.
-
-See [media provenance](docs/media-assets.md) for the supplied screenshots and generated hero asset.
+- [Product requirements](docs/PRD.md)
+- [Interview walkthrough](docs/RECRUITER_GUIDE.md)
+- [Project structure and reading order](docs/PROJECT_STRUCTURE.md)
+- [Migration plan](docs/RENTAL_SYSTEM_MIGRATION_PLAN.md)
+- [Media provenance](docs/media-assets.md)
 
 Developed by [Helber Soares](https://www.linkedin.com/in/helber-soares/).
-
----
-
-# Resumo em português
-
-O Rental Book Equipment é um sistema full-stack para operação de locação de equipamentos e serviços para eventos. O produto permite cadastrar equipamentos físicos, controlar equipe, criar eventos, validar conflitos de horário, acompanhar pagamentos, visualizar o calendário e gerar relatórios mensais.
-
-O projeto já possui uma base operacional com calendário, equipe, equipamentos, pagamentos, dashboard, relatórios, autenticação, seed do banco, interface responsiva e administração em português/inglês. Também existe uma landing page pública para apresentar o serviço.
-
-O principal desafio de negócio é tratar disponibilidade por intervalo de tempo, e não apenas por data. Assim, o mesmo equipamento pode participar de dois eventos no mesmo dia quando os horários não se sobrepõem.
-
-O [PRD](docs/PRD.md) descreve a visão, os usuários, os requisitos, as regras de negócio, os critérios de aceite e os próximos incrementos do produto.
